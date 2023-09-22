@@ -19,7 +19,9 @@ fprintf("min_samples: %d \n", min_samples_number);
 
 windows_number = get_windows_number(min_samples_number, WINDOW_SHIFT, WINDOW_SIZE);
 
-fprintf("windows number: %d \n", windows_number);
+fprintf("windows number:  ")
 
-%% feature extraction
+
+
+%% 
 
