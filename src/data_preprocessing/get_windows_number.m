@@ -12,7 +12,7 @@ function windows_number = get_windows_number(min_samples_number, window_shift, w
         if end_index > min_samples_number
             break;
         end
-
+        
         i = i + 1;
     end
 

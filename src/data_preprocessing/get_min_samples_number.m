@@ -1,5 +1,6 @@
-function min_samples_number = get_min_samples_number(resources_path, csv_files, activities)
+function min_samples_number = get_min_samples_number(resources_path, activities)
 
+    csv_files = dir(fullfile(resources_path, '*.csv'));
     min_samples_number = 0;
     
     for i = 1 : length(csv_files) / 6
@@ -18,7 +19,7 @@ function min_samples_number = get_min_samples_number(resources_path, csv_files, 
                 min_samples_number = n_samples;
             end
 
-            % fprintf("file: %s, samples: %d \n", filename, n_samples);
+            fprintf("file: %s, samples: %d \n", filename, n_samples); % TEST
         end
     end
 end

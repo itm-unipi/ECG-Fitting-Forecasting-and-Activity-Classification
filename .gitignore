@@ -1,2 +1,3 @@
 /resources
-.asv
+*.asv
+/tmp
