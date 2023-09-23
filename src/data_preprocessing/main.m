@@ -9,6 +9,7 @@ RESOURCES_PATH = '../resources';
 ACTIVITIES = ["walk", "sit", "run"];
 WINDOW_SHIFT = 0.2;
 WINDOW_SIZE = 50000;
+CORRELATION_THRESHOLD = 0.9;
 
 %% Compute Windows number for each signal
 
@@ -28,6 +29,25 @@ save('../tmp/non_normalised_features_matrix', 'features_matrix');
 
 %% Normalise and Remove Correlated Features
 
-% TODO
+load('../tmp/non_normalised_features_matrix');
+
+% Normalise features matrix
+non_negative_features_matrix = features_matrix - min(features_matrix);
+normalized_features_matrix = non_negative_features_matrix ./ max(non_negative_features_matrix);
+
+% Remove correlated features
+correlation_matrix = corrcoef(normalized_features_matrix);
+[correlated_columns_indices, ~] = find(tril((abs(correlation_matrix) > CORRELATION_THRESHOLD), -1));
+correlated_columns_indices = unique(sort(correlated_columns_indices));
+
+uncorrelated_features_matrix = normalized_features_matrix;
+uncorrelated_features_matrix(:, correlated_columns_indices) = [];
+
+save('../tmp/uncorrelated_features_matrix', 'uncorrelated_features_matrix');
+
+%%
+
+
+ 
 
 
