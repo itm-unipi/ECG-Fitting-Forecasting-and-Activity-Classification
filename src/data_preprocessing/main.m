@@ -52,6 +52,21 @@ save('../tmp/uncorrelated_features_matrix', 'uncorrelated_features_matrix');
 [ecg_mean_targets_vector, ecg_std_targets_vector] = get_ecg_targets_vector(RESOURCES_PATH);
 
 save('../tmp/ecg_targets_vectors', 'ecg_mean_targets_vector', 'ecg_std_targets_vector');
- 
 
+%% Data Augmentation
 
+load('../tmp/uncorrelated_features_matrix');
+load('../tmp/ecg_targets_vectors');
+
+k_fold_window_size = 11;
+augmentation_factor = 5;
+
+[augmented_features_matrix, augmented_ecg_mean_targets_vector, augmented_ecg_std_targets_vector] = get_augmented_data( ...
+    k_fold_window_size, augmentation_factor, uncorrelated_features_matrix, ecg_mean_targets_vector, ecg_std_targets_vector);
+
+save('../tmp/augmented_data', ...
+    'augmented_features_matrix', ...
+    'augmented_ecg_mean_targets_vector', ...
+    'augmented_ecg_std_targets_vector');
+
+%% TODO: normalisation after augmentation
