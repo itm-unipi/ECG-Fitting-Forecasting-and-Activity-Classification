@@ -11,6 +11,8 @@ WINDOW_SHIFT = 0.2;
 WINDOW_SIZE = 50000;
 CORRELATION_THRESHOLD = 0.9;
 
+addpath('./data_preprocessing');
+
 %% Compute Windows number for each signal
 
 min_samples_number = get_min_samples_number(RESOURCES_PATH, ACTIVITIES);
@@ -45,9 +47,11 @@ uncorrelated_features_matrix(:, correlated_columns_indices) = [];
 
 save('../tmp/uncorrelated_features_matrix', 'uncorrelated_features_matrix');
 
-%%
+%% Get ECG Mean and Standard Deviation Vectors (Targets)
 
+[ecg_mean_targets_vector, ecg_std_targets_vector] = get_ecg_targets_vector(RESOURCES_PATH);
 
+save('../tmp/ecg_targets_vectors', 'ecg_mean_targets_vector', 'ecg_std_targets_vector');
  
 
 
