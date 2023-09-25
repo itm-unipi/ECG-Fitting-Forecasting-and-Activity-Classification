@@ -10,6 +10,8 @@ ACTIVITIES = ["walk", "sit", "run"];
 WINDOW_SHIFT = 0.2;
 WINDOW_SIZE = 50000;
 CORRELATION_THRESHOLD = 0.9;
+K_FOLD_WINDOW_SIZE = 22;
+AUGMENTATION_FACTOR = 5;
 
 addpath('./data_preprocessing');
 
@@ -58,15 +60,17 @@ save('../tmp/ecg_targets_vectors', 'ecg_mean_targets_vector', 'ecg_std_targets_v
 load('../tmp/uncorrelated_features_matrix');
 load('../tmp/ecg_targets_vectors');
 
-k_fold_window_size = 11;
-augmentation_factor = 5;
-
 [augmented_features_matrix, augmented_ecg_mean_targets_vector, augmented_ecg_std_targets_vector] = get_augmented_data( ...
-    k_fold_window_size, augmentation_factor, uncorrelated_features_matrix, ecg_mean_targets_vector, ecg_std_targets_vector);
+    K_FOLD_WINDOW_SIZE, AUGMENTATION_FACTOR, uncorrelated_features_matrix, ecg_mean_targets_vector, ecg_std_targets_vector);
+
+% Normalise augmented features matrix
+non_negative_augmented_features_matrix = augmented_features_matrix - min(augmented_features_matrix);
+normalized_augmented_features_matrix = non_negative_augmented_features_matrix ./ max(non_negative_augmented_features_matrix);
 
 save('../tmp/augmented_data', ...
-    'augmented_features_matrix', ...
+    'normalized_augmented_features_matrix', ...
     'augmented_ecg_mean_targets_vector', ...
     'augmented_ecg_std_targets_vector');
 
-%% TODO: normalisation after augmentation
+
+
