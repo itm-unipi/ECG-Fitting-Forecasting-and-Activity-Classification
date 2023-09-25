@@ -1,9 +1,9 @@
-function perf = sequentialfs_comparison(x, t) 
-    
+function perf = sequentialfs_comparison(x, t, hidden_layer_size) 
+
     % Create a network 
-    hiddenLayerSize = 3; 
-    net = fitnet(hiddenLayerSize); 
+    net = fitnet(hidden_layer_size); 
     net.trainParam.showWindow = 0;
+    net.performFcn = 'mse';
 
     % Train the network 
     [net, ~] = train(net, x', t'); 
