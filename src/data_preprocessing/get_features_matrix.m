@@ -1,11 +1,11 @@
-function features_matrix = get_features_matrix(resources_path, window_shift, window_size, windows_number)
+function features_matrix = get_features_matrix(resources_path, window_shift, window_size)
 
     FEATURES_NUMBER = 13;
     SIGNALS_NUMBER = 11;
 
     % Get names of timeseries files and initialize features matrix
     csv_timeseries = dir(fullfile(resources_path, '*timeseries.csv'));
-    features_matrix = zeros(length(csv_timeseries), FEATURES_NUMBER * windows_number * SIGNALS_NUMBER);
+    features_matrix = [];
 
     % Iterate timeseries files
     for k = 1 : length(csv_timeseries)
@@ -15,26 +15,30 @@ function features_matrix = get_features_matrix(resources_path, window_shift, win
         raw_data = readtable(file_path);
         raw_data = raw_data(:, 2:end);
         
-        % Iterate all the signals (raw data columns)
-        for i = 1 : size(raw_data, 2)
+        % Iterate all possible windows
+        i = 1;
+        while true
 
-            % Iterate windows of a signal
-            for j = 1 : windows_number
-                
-                fprintf("file: %d, signal: %d, window: %d\n", k, i, j);
-                
-                % Extract raw data from window
-                start_row_index = (j - 1) * floor(window_shift * window_size) + 1;
-                end_row_index = start_row_index + window_size - 1;
-                window_raw_data = table2array(raw_data(start_row_index : end_row_index, i));
-                
-                % Compute column indices of features matrix in witch copy
-                % the computed features from the window
-                start_features_column_index = ((i - 1) * windows_number + (j - 1)) * FEATURES_NUMBER + 1; 
-                end_features_column_index = start_features_column_index + FEATURES_NUMBER - 1;
+            % Compute window row indices
+            start_window_index = (i - 1) * floor(window_shift * window_size) + 1;
+            end_window_index = start_window_index + window_size - 1;
 
-                % Compute and insert features in the features matrix
-                features_matrix(k, start_features_column_index : end_features_column_index) =  [
+            % Check if the window exceeds the raw_data rows number 
+            if(end_window_index > size(raw_data, 1))
+                break;
+            end
+
+            % Initialize the new window features row
+            window_features = zeros(1, SIGNALS_NUMBER * FEATURES_NUMBER);
+            
+            % Iterate all the signals (raw data columns)
+            for j = 1 : size(raw_data, 2)
+                
+                fprintf("file: %d, window: %d, signal: %d\n", k, i, j);
+                
+                % Extract raw data from window and compute features
+                window_raw_data = table2array(raw_data(start_window_index : end_window_index, j));
+                signal_features = [
                     mean(window_raw_data),      ...     % Mean
                     median(window_raw_data),    ...     % Median
                     var(window_raw_data),       ...     % Variance
@@ -49,7 +53,16 @@ function features_matrix = get_features_matrix(resources_path, window_shift, win
                     medfreq(window_raw_data),   ...     % Median Frequency
                     obw(window_raw_data)                % Occupied Bandwidth
                 ];
+    
+                % Copy the new computed values in the window features row
+                start_signal_index = (j - 1) * FEATURES_NUMBER + 1; 
+                end_signal_index = start_signal_index + FEATURES_NUMBER - 1;
+                window_features(1, start_signal_index : end_signal_index) = signal_features;
             end
+
+            % Concatenate the new window features row with the features_matrix
+            features_matrix = [features_matrix; window_features];
+            i = i + 1;
         end
     end
 end

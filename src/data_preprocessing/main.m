@@ -7,29 +7,19 @@ clc;
 N_SUBJECTS = 22;
 RESOURCES_PATH = '../resources';
 ACTIVITIES = ["walk", "sit", "run"];
-WINDOW_SHIFT = 0.2;
+WINDOW_SHIFT = 0.3;
 WINDOW_SIZE = 50000;
 CORRELATION_THRESHOLD = 0.9;
-K_FOLD_WINDOW_SIZE = 22;
-AUGMENTATION_FACTOR = 5;
+K_FOLD_WINDOW_SIZE = 111;
+AUGMENTATION_FACTOR = 3;
 FINAL_SELECTED_FEATURES = 10;
-SEQUENTIALFS_HIDDEN_LAYER_SIZE = 3;
+SEQUENTIALFS_HIDDEN_LAYER_SIZE = 18;
 
 addpath('./data_preprocessing');
 
-%% Compute Windows number for each signal
-
-min_samples_number = get_min_samples_number(RESOURCES_PATH, ACTIVITIES);
-
-fprintf("min_samples: %d \n", min_samples_number);
-
-windows_number = get_windows_number(min_samples_number, WINDOW_SHIFT, WINDOW_SIZE);
-
-fprintf("windows number: %d \n", windows_number);
-
 %% Generate Features Matrix containing all features of all signals
 
-features_matrix = get_features_matrix(RESOURCES_PATH, WINDOW_SHIFT, WINDOW_SIZE, windows_number);
+features_matrix = get_features_matrix(RESOURCES_PATH, WINDOW_SHIFT, WINDOW_SIZE);
 
 save('../tmp/non_normalised_features_matrix', 'features_matrix');
 
@@ -53,7 +43,7 @@ save('../tmp/uncorrelated_features_matrix', 'uncorrelated_features_matrix');
 
 %% Get ECG Mean and Standard Deviation Vectors (Targets)
 
-[ecg_mean_targets_vector, ecg_std_targets_vector] = get_ecg_targets_vector(RESOURCES_PATH);
+[ecg_mean_targets_vector, ecg_std_targets_vector] = get_ecg_targets_vector(RESOURCES_PATH, WINDOW_SHIFT, WINDOW_SIZE);
 
 save('../tmp/ecg_targets_vectors', 'ecg_mean_targets_vector', 'ecg_std_targets_vector');
 
@@ -94,7 +84,6 @@ opts = statset('Display', 'iter', 'UseParallel', true);
      @(x, t, hidden_layer_size)sequentialfs_comparison(x, t, SEQUENTIALFS_HIDDEN_LAYER_SIZE) , ...
     normalized_augmented_features_matrix, ...
     augmented_ecg_std_targets_vector, ...
-    SEQUENTIALFS_HIDDEN_LAYER_SIZE, ...
     'cv', 'none', ...
     'opt', opts, ... 
     'nfeatures', FINAL_SELECTED_FEATURES);
