@@ -7,7 +7,7 @@ clc;
 MAX_NEURONS_NUMBER = 100;
 NEURONS_NUMBER_STEP = 5;
 SPREAD_STEP = 0.2;
-N_REPETION = 5;
+N_REPETITION = 5;
 ERROR_GOAL = 0;
 ECG_TARGET = "mean"; % 'mean' or 'std'
 
@@ -30,7 +30,7 @@ min_spread = min(distance);
 max_spread = max(distance);
 
 fprintf("%d %d \n", min_spread, max_spread);
-results = zeros(floor((max_spread - min_spread) / SPREAD_STEP), N_REPETION + 2);
+results = zeros(floor((max_spread - min_spread) / SPREAD_STEP), N_REPETITION + 2);
 
 %% RBF Training and Test 
 
@@ -47,7 +47,7 @@ while true
     results(i, 1) = spread;
     
     % Iterate all repetitions
-    for j = 1 : N_REPETION
+    for j = 1 : N_REPETITION
 
         % Create and train a rbf network with Bayesian regularization
         net = newrb(x, t, ERROR_GOAL, spread, MAX_NEURONS_NUMBER, NEURONS_NUMBER_STEP);

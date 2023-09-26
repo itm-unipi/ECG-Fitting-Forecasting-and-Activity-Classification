@@ -4,7 +4,7 @@ clc;
 
 %% Constants
 
-N_REPETION = 5;
+N_REPETITION = 5;
 MAX_HIDDEN_LAYER_NEURONS = 100;
 MIN_HIDDEN_LAYER_NEURONS = 10;
 HIDDEN_LAYER_NEURONS_STEP = 5;
@@ -23,7 +23,7 @@ else
     t = final_ecg_std_targets_vector';
 end
 
-results = zeros((MAX_HIDDEN_LAYER_NEURONS - MIN_HIDDEN_LAYER_NEURONS) / HIDDEN_LAYER_NEURONS_STEP, N_REPETION + 2);
+results = zeros((MAX_HIDDEN_LAYER_NEURONS - MIN_HIDDEN_LAYER_NEURONS) / HIDDEN_LAYER_NEURONS_STEP, N_REPETITION + 2);
 
 %% MLP Training and Test
 
@@ -42,7 +42,7 @@ while true
     results(i, 1) = hidden_layer_size;
 
     % Iterate all repetitions
-    for j = 1 : N_REPETION
+    for j = 1 : N_REPETITION
 
         % Create and train a mlp network
         net = fitnet(hidden_layer_size, 'trainbr');
