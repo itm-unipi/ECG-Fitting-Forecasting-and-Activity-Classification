@@ -30,7 +30,7 @@ min_spread = min(distance);
 max_spread = max(distance);
 
 fprintf("%d %d \n", min_spread, max_spread);
-results = zeros(floor((max_spread - min_spread) / SPREAD_STEP), N_REPETITION + 2);
+results = zeros(floor((max_spread - min_spread) / SPREAD_STEP), N_REPETITION * 2 + 1);
 
 %% RBF Training and Test 
 
@@ -61,8 +61,8 @@ while true
         mse_value = mse(y', t');
         regression_stats = fitlm(t',y');
         r_value = sqrt(regression_stats.Rsquared.Ordinary);
-        results(i, j + 1) = mse_value;
-        results(i, j + 2) = r_value;
+        results(i, j * 2) = mse_value;
+        results(i, j * 2 + 1) = r_value;
 
         fprintf("spread: %d, repetition: %d, mse: %d, r-value: %d\n", spread, j, mse_value, r_value);
     end
