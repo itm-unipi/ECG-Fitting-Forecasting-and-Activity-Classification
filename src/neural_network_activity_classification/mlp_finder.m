@@ -48,10 +48,10 @@ while true
         test_t = t(:, tr.testInd);
         test_y = net(test_x);
         [c, ~] = confusion(test_t, test_y);
-        true_positive_percentage = 100 * (1 - c);
-        results(i, j + 1) = true_positive_percentage;
+        correct_classification_percentage = 100 * (1 - c);
+        results(i, j + 1) = correct_classification_percentage;
 
-        fprintf("hidden neurons: %d, repetition: %d, true positive: %d\n", hidden_layer_size, j, true_positive_percentage);
+        fprintf("hidden neurons: %d, repetition: %d, correct classification: %d%%\n", hidden_layer_size, j, correct_classification_percentage);
     end
 
     i = i + 1;
