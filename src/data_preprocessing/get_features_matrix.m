@@ -1,4 +1,4 @@
-function features_matrix = get_features_matrix(resources_path, window_shift, window_size)
+function [features_matrix, activities_targets_vector] = get_features_matrix(resources_path, window_shift, window_size, activities)
 
     FEATURES_NUMBER = 13;
     SIGNALS_NUMBER = 11;
@@ -6,6 +6,7 @@ function features_matrix = get_features_matrix(resources_path, window_shift, win
     % Get names of timeseries files and initialize features matrix
     csv_timeseries = dir(fullfile(resources_path, '*timeseries.csv'));
     features_matrix = [];
+    activities_targets_vector = [];
 
     % Iterate timeseries files
     for k = 1 : length(csv_timeseries)
@@ -14,6 +15,14 @@ function features_matrix = get_features_matrix(resources_path, window_shift, win
         file_path = fullfile(resources_path, csv_timeseries(k).name);
         raw_data = readtable(file_path);
         raw_data = raw_data(:, 2:end);
+        
+        % Extract the activity of the file
+        for i = 1 : size(activities, 2)
+            if contains(csv_timeseries(k).name, activities(i))
+                activity = i;
+                break;
+            end
+        end
         
         % Iterate all possible windows
         i = 1;
@@ -60,8 +69,11 @@ function features_matrix = get_features_matrix(resources_path, window_shift, win
                 window_features(1, start_signal_index : end_signal_index) = signal_features;
             end
 
-            % Concatenate the new window features row with the features_matrix
+            % Concatenate the new window features row with the features_matrix and 
+            % the activity of the window with the activity vector
             features_matrix = [features_matrix; window_features];
+            activities_targets_vector = [activities_targets_vector; activity];
+            
             i = i + 1;
         end
     end
