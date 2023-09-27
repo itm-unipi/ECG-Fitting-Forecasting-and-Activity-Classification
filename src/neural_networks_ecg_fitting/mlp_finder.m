@@ -66,8 +66,8 @@ end
 
 if ECG_TARGET == "mean"
     writematrix(results, fullfile('../tmp', 'mlp_mean_ecg_fitting_results.csv'));
-    save('../tmp/mlp_mean_ecg_fitting_results', results);
+    save('../tmp/mlp_mean_ecg_fitting_results', 'results');
 else
     writematrix(results, fullfile('../tmp', 'mlp_std_ecg_fitting_results.csv'));
-    save('../tmp/mlp_std_ecg_fitting_results', results);
+    save('../tmp/mlp_std_ecg_fitting_results', 'results');
 end
