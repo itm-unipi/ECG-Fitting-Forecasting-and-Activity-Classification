@@ -5,6 +5,7 @@ clc;
 %% Constants
 
 MLP_HIDDEN_LAYER_SIZE = 20;
+MLP_TRAINING_FUNCTION = "trainbr";
 
 addpath('./data_preprocessing');
 
@@ -18,7 +19,7 @@ t = full(ind2vec(final_activities_targets_vector'));
 %% MLP Mean Training and Test
 
 % Create and train a mlp network
-net = patternnet(MLP_HIDDEN_LAYER_SIZE);
+net = patternnet(MLP_HIDDEN_LAYER_SIZE, MLP_TRAINING_FUNCTION);
 [net, tr] = train(net, x, t);
 
 % Test the network
