@@ -16,6 +16,7 @@ FINAL_SELECTED_FEATURES = 10;
 SEQUENTIALFS_HIDDEN_LAYER_SIZE = 18;
 
 addpath('./data_preprocessing');
+rng("default");
 
 %% Generate Features Matrix containing all features of all signals
 
