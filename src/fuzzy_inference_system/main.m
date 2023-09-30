@@ -4,13 +4,15 @@ clc;
 
 %% Constants
 
-FINAL_SELECTED_FEATURES = 3;
+FINAL_SELECTED_FEATURES = 14;
 SEQUENTIALFS_HIDDEN_LAYER_SIZE = 18;
 HISTOGRAM_BUCKET_SIZE = 0.05;
 ACTIVITIES = ["walk", "sit", "run"];
 
 addpath('./fuzzy_inference_system');
 addpath('./data_preprocessing');
+rng("default");
+figure_id = 1;
 
 %% Load dataset and extract the 3 most relevant features
 
@@ -39,18 +41,15 @@ save('../tmp/fis_final_data', ...
 
 load('../tmp/fis_final_data');
 
-figure(1), histogram(fis_features_activities_matrix(:, 1)', BinWidth=HISTOGRAM_BUCKET_SIZE);
-title('Feature 1');
+for i = 1 : FINAL_SELECTED_FEATURES
+    
+    figure(figure_id);
+    histogram(fis_features_activities_matrix(:, i)', BinWidth=HISTOGRAM_BUCKET_SIZE);
+    title("Feature " + i);
 
-figure(2), histogram(fis_features_activities_matrix(:, 2)', BinWidth=HISTOGRAM_BUCKET_SIZE/2);
-title('Feature 2');
-
-figure(3), histogram(fis_features_activities_matrix(:, 3)', BinWidth=HISTOGRAM_BUCKET_SIZE);
-title('Feature 3');
-
-saveas(1, '../tmp/fis_feature_1_histogram', 'png');
-saveas(2, '../tmp/fis_feature_2_histogram', 'png');
-saveas(3, '../tmp/fis_feature_3_histogram', 'png');
+    saveas(figure_id, "../tmp/fis_feature_" + i + "_histogram", 'png');
+    figure_id = figure_id + 1;
+end
 
 %% Find membership functions for input and output
 
@@ -63,12 +62,13 @@ y2 = gbellmf(x, [0.12 1.3 0.375]);
 y3 = gbellmf(x, [0.08 1 0.475]);
 y4 = gbellmf(x, [0.12 1.5 0.675]);
 
-figure(4); plot(x, y1, 'black', x, y2, 'red', x, y3, 'green', x, y4, 'blue');
+figure(figure_id); plot(x, y1, 'black', x, y2, 'red', x, y3, 'green', x, y4, 'blue');
 title('Feature 1 Analysis');
 xlabel('x');
 ylabel('Degree of Membership');
 
-saveas(4, '../tmp/fis_feature_1_membership_function', 'png');
+saveas(figure_id, '../tmp/fis_feature_1_membership_function', 'png');
+figure_id = figure_id + 1;
 
 % Feature 2
 
@@ -77,12 +77,13 @@ y2 = gbellmf(x, [0.12 2 0.475]);
 y3 = gbellmf(x, [0.05 1.5 0.675]);
 y4 = gbellmf(x, [0.05 2 0.975]);
 
-figure(5); plot(x, y1, 'black', x, y2, 'red', x, y3, 'green', x, y4, 'blue');
+figure(figure_id); plot(x, y1, 'black', x, y2, 'red', x, y3, 'green', x, y4, 'blue');
 title('Feature 2 Analysis');
 xlabel('x');
 ylabel('Degree of Membership');
 
-saveas(5, '../tmp/fis_feature_2_membership_function', 'png');
+saveas(figure_id, '../tmp/fis_feature_2_membership_function', 'png');
+figure_id = figure_id + 1;
 
 % Feature 3
 
@@ -90,12 +91,13 @@ y1 = gbellmf(x, [0.1 1.2 0.175]);
 y2 = gbellmf(x, [0.15 1 0.575]);
 y3 = gbellmf(x, [0.1 1.2 0.775]);
 
-figure(6); plot(x, y1, 'blue', x, y2, 'red', x, y3, 'green');
+figure(figure_id); plot(x, y1, 'blue', x, y2, 'red', x, y3, 'green');
 title('Feature 3 Analysis');
 xlabel('x');
 ylabel('Degree of Membership');
 
-saveas(6, '../tmp/fis_feature_3_membership_function', 'png');
+saveas(figure_id, '../tmp/fis_feature_3_membership_function', 'png');
+figure_id = figure_id + 1;
 
 % Output
 x = 0:0.01:4;
@@ -104,12 +106,13 @@ y1 = gbellmf(x, [0.2 2 1]);
 y2 = gbellmf(x, [0.2 2 2]);
 y3 = gbellmf(x, [0.2 2 3]);
 
-figure(7); plot(x, y1, 'blue', x, y2, 'red', x, y3, 'green');
+figure(figure_id); plot(x, y1, 'blue', x, y2, 'red', x, y3, 'green');
 title('Output Analysis');
 xlabel('x');
 ylabel('Degree of Membership');
 
-saveas(7, '../tmp/fis_output_membership_function', 'png');
+saveas(figure_id, '../tmp/fis_output_membership_function', 'png');
+figure_id = figure_id + 1;
 
 %% Mamdani FIS creation
 
@@ -141,7 +144,7 @@ fis = addMF(fis, "activity", "gbellmf", [0.2 2 3], 'Name', "run");
 
 load('../tmp/fis_final_data');
 
-figure(8);
+figure(figure_id);
 
 for i = 1 : 3
 
@@ -155,7 +158,8 @@ for i = 1 : 3
     end
 end
 
-saveas(8, '../tmp/fis_features_of_activities_histograms', 'png');
+saveas(figure_id, '../tmp/fis_features_of_activities_histograms', 'png');
+figure_id = figure_id + 1;
 
 
 
