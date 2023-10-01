@@ -4,7 +4,7 @@ clc;
 
 %% Constants
 
-FINAL_SELECTED_FEATURES = 14;
+FINAL_SELECTED_FEATURES = 4;
 SEQUENTIALFS_HIDDEN_LAYER_SIZE = 18;
 HISTOGRAM_BUCKET_SIZE = 0.05;
 ACTIVITIES = ["walk", "sit", "run"];
@@ -18,6 +18,7 @@ figure_id = 1;
 
 load('../tmp/final_data');
 
+%{
 opts = statset('Display', 'iter', 'UseParallel', true);
 
 % Select the most relevant features for the activity target
@@ -31,6 +32,10 @@ opts = statset('Display', 'iter', 'UseParallel', true);
 
 % Prepare the fis dataset
 fis_features_activities_matrix = final_features_activities_matrix(:, fs);
+%}
+
+filter = [false false true false false true false false false false true false true false];
+fis_features_activities_matrix = final_features_activities_matrix(:, filter);
 fis_activities_targets_vector = final_activities_targets_vector;
 
 save('../tmp/fis_final_data', ...
@@ -57,12 +62,11 @@ end
 
 x = 0:0.01:1;
 
-y1 = gbellmf(x, [0.1 1.3 0.175]);
-y2 = gbellmf(x, [0.12 1.3 0.375]);
-y3 = gbellmf(x, [0.08 1 0.475]);
-y4 = gbellmf(x, [0.12 1.5 0.675]);
+y1 = gbellmf(x, [0.03 2 0.025]);
+y2 = gbellmf(x, [0.1 1.5 0.4]);
+y3 = gbellmf(x, [0.2 2.5 0.725]);
 
-figure(figure_id); plot(x, y1, 'black', x, y2, 'red', x, y3, 'green', x, y4, 'blue');
+figure(figure_id); plot(x, y1, 'blue', x, y2, 'red', x, y3, 'green');
 title('Feature 1 Analysis');
 xlabel('x');
 ylabel('Degree of Membership');
@@ -72,10 +76,10 @@ figure_id = figure_id + 1;
 
 % Feature 2
 
-y1 = gbellmf(x, [0.05 2 0.075]);
-y2 = gbellmf(x, [0.12 2 0.475]);
-y3 = gbellmf(x, [0.05 1.5 0.675]);
-y4 = gbellmf(x, [0.05 2 0.975]);
+y1 = gbellmf(x, [0.18 1.5 0.01]);
+y2 = gbellmf(x, [0.2 1.5 0.275]);
+y3 = gbellmf(x, [0.1 1.5 0.525]);
+y4 = gbellmf(x, [0.1 1.5 0.825]);
 
 figure(figure_id); plot(x, y1, 'black', x, y2, 'red', x, y3, 'green', x, y4, 'blue');
 title('Feature 2 Analysis');
@@ -85,14 +89,28 @@ ylabel('Degree of Membership');
 saveas(figure_id, '../tmp/fis_feature_2_membership_function', 'png');
 figure_id = figure_id + 1;
 
-% Feature 3
+% Feature 3 
 
-y1 = gbellmf(x, [0.1 1.2 0.175]);
-y2 = gbellmf(x, [0.15 1 0.575]);
-y3 = gbellmf(x, [0.1 1.2 0.775]);
+y1 = gbellmf(x, [0.06 1.5 0.125]);
+y2 = gbellmf(x, [0.03 1.5 0.475]);
+y3 = gbellmf(x, [0.02 1.8 0.675]);
 
 figure(figure_id); plot(x, y1, 'blue', x, y2, 'red', x, y3, 'green');
 title('Feature 3 Analysis');
+xlabel('x');
+ylabel('Degree of Membership');
+
+saveas(figure_id, '../tmp/fis_feature_3_membership_function', 'png');
+figure_id = figure_id + 1;
+
+% Feature 4
+
+y1 = gbellmf(x, [0.05 2 0.1]);
+y2 = gbellmf(x, [0.145 2 0.475]);
+y3 = gbellmf(x, [0.04 2 0.95]);
+
+figure(figure_id); plot(x, y1, 'blue', x, y2, 'red', x, y3, 'green');
+title('Feature 4 Analysis');
 xlabel('x');
 ylabel('Degree of Membership');
 
@@ -118,22 +136,26 @@ figure_id = figure_id + 1;
 
 fis = mamfis('Name' , "MamdaniFis");
 
-fis = addInput(fis, [0 1], 'Name', "feature_1");
-fis = addMF(fis, "feature_1", "gbellmf", [0.1 1.3 0.175], 'Name', "low");
-fis = addMF(fis, "feature_1", "gbellmf", [0.12 1.3 0.375], 'Name', "medium");
-fis = addMF(fis, "feature_1", "gbellmf", [0.08 1 0.475], 'Name', "high");
-fis = addMF(fis, "feature_1", "gbellmf", [0.12 1.5 0.675], 'Name', "very high");
+fis = addInput(fis, [0 1], 'Name', "f1");
+fis = addMF(fis, "f1", "gbellmf", [0.03 2 0.025], 'Name', "low");
+fis = addMF(fis, "f1", "gbellmf", [0.1 1.5 0.4], 'Name', "medium");
+fis = addMF(fis, "f1", "gbellmf", [0.2 2.5 0.725], 'Name', "high");
 
-fis = addInput(fis, [0 1], 'Name', "feature_2");
-fis = addMF(fis, "feature_2", "gbellmf", [0.05 2 0.075], 'Name', "low");
-fis = addMF(fis, "feature_2", "gbellmf", [0.12 2 0.475], 'Name', "medium");
-fis = addMF(fis, "feature_2", "gbellmf", [0.05 1.5 0.675], 'Name', "high");
-fis = addMF(fis, "feature_2", "gbellmf", [0.05 2 0.975], 'Name', "very high");
+fis = addInput(fis, [0 1], 'Name', "f2");
+fis = addMF(fis, "f2", "gbellmf", [0.18 1.5 0.01], 'Name', "low");
+fis = addMF(fis, "f2", "gbellmf", [0.2 1.5 0.275], 'Name', "medium");
+fis = addMF(fis, "f2", "gbellmf", [0.1 1.5 0.525], 'Name', "high");
+fis = addMF(fis, "f2", "gbellmf", [0.1 1.5 0.825], 'Name', "very_high");
 
-fis = addInput(fis, [0 1], 'Name', "feature_3");
-fis = addMF(fis, "feature_3", "gbellmf", [0.1 1.2 0.175], 'Name', "low");
-fis = addMF(fis, "feature_3", "gbellmf", [0.15 1 0.575], 'Name', "medium");
-fis = addMF(fis, "feature_3", "gbellmf", [0.1 1.2 0.775], 'Name', "high");
+fis = addInput(fis, [0 1], 'Name', "f3");
+fis = addMF(fis, "f3", "gbellmf", [0.06 1.5 0.125], 'Name', "low");
+fis = addMF(fis, "f3", "gbellmf", [0.03 1.5 0.475], 'Name', "medium");
+fis = addMF(fis, "f3", "gbellmf", [0.02 1.8 0.675], 'Name', "high");
+
+fis = addInput(fis, [0 1], 'Name', "f4");
+fis = addMF(fis, "f4", "gbellmf", [0.05 2 0.1], 'Name', "low");
+fis = addMF(fis, "f4", "gbellmf", [0.145 2 0.475], 'Name', "medium");
+fis = addMF(fis, "f4", "gbellmf", [0.04 2 0.95], 'Name', "high");
 
 fis = addOutput(fis, [1 3], 'Name', "activity");
 fis = addMF(fis, "activity", "gbellmf", [0.2 2 1], 'Name', "sit");
@@ -161,7 +183,34 @@ end
 saveas(figure_id, '../tmp/fis_features_of_activities_histograms', 'png');
 figure_id = figure_id + 1;
 
+%% Add rules
 
+rules_list = [ 
+    ... % walk rules
+    "f1==high & f2==medium & f3==low & f4==medium => activity=walk (0.3)" ...
+    "f1==medium & f2==medium & f3==low & f4==medium => activity=walk (0.4)" ...
+    "f2==very_high => activity=walk (0.6)" ...
+    "f1==low & f3==low & f4~=high => activity=walk (0.8)" ...
+    "f1==low => activity=walk (0.7)" ...
+    "f4==low => activity=walk (0.8)" ...
+    "f3==low & f4~=high => activity=walk (0.2)" ...
+    ... % sit rules
+    "f1==high & f2==medium & f3==low & f4==medium => activity=sit (0.3)" ...
+    "f1==medium & f2==low & f3==low & f4==medium => activity=sit (0.3)" ... 
+    "f3==medium | f3==high => activity=sit (0.5)" ...
+    "f1~=low & f2~=very_high & f3==low & f4~=low => activity=sit (0.2)" ...
+    "f4==high => activity=sit (0.8)" ...
+    ... % run rules
+    "f1==high & f2==medium & f3==low & f4==medium => activity=run (0.3)" ...
+    "f2==very_high && f3==high => activity=run (0.8)" ...
+    "f3==medium | f3==high => activity=run (0.5)" ...
+    "f1==low => activity=run (0.3)" ...
+    "f2==very_high => activity=run (0.4)" ...
+    "f4==low => activity=run (0.3)" ...    
+    "f4==high => activity=run (0.4)"
+];
+fis = addRule(fis, rules_list);
 
-
-
+fis.DefuzzificationMethod = "centroid";
+y = evalfis(fis, fis_features_activities_matrix);
+error = mse(y, fis_activities_targets_vector);
