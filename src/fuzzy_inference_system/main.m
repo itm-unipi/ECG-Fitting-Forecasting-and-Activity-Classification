@@ -162,55 +162,13 @@ fis = addMF(fis, "activity", "gbellmf", [0.2 2 1], 'Name', "sit");
 fis = addMF(fis, "activity", "gbellmf", [0.2 2 2], 'Name', "walk");
 fis = addMF(fis, "activity", "gbellmf", [0.2 2 3], 'Name', "run");
 
-%% Compute histograms of each feature for each activity
+% Generate rules using Wang-Mendel method
+rules = get_rules(fis, fis_features_activities_matrix, fis_activities_targets_vector);
+fis = addRule(fis, rules);
 
-load('../tmp/fis_final_data');
+%% Test the FIS
 
-figure(figure_id);
+%fis.DefuzzificationMethod = "lom";
 
-for i = 1 : 3
-
-    fis_features_activity_matrix = fis_features_activities_matrix(fis_activities_targets_vector == i, :);
-
-    for j = 1 : FINAL_SELECTED_FEATURES
-
-        subplot(3, FINAL_SELECTED_FEATURES, (i - 1) * FINAL_SELECTED_FEATURES + j);
-        histogram(fis_features_activity_matrix(:, j)', BinWidth=HISTOGRAM_BUCKET_SIZE, BinLimits=[0, 1]);
-        title(ACTIVITIES(i) + ": feature " + j);
-    end
-end
-
-saveas(figure_id, '../tmp/fis_features_of_activities_histograms', 'png');
-figure_id = figure_id + 1;
-
-%% Add rules
-
-rules_list = [ 
-    ... % walk rules
-    "f1==high & f2==medium & f3==low & f4==medium => activity=walk (0.3)" ...
-    "f1==medium & f2==medium & f3==low & f4==medium => activity=walk (0.4)" ...
-    "f2==very_high => activity=walk (0.6)" ...
-    "f1==low & f3==low & f4~=high => activity=walk (0.8)" ...
-    "f1==low => activity=walk (0.7)" ...
-    "f4==low => activity=walk (0.8)" ...
-    "f3==low & f4~=high => activity=walk (0.2)" ...
-    ... % sit rules
-    "f1==high & f2==medium & f3==low & f4==medium => activity=sit (0.3)" ...
-    "f1==medium & f2==low & f3==low & f4==medium => activity=sit (0.3)" ... 
-    "f3==medium | f3==high => activity=sit (0.5)" ...
-    "f1~=low & f2~=very_high & f3==low & f4~=low => activity=sit (0.2)" ...
-    "f4==high => activity=sit (0.8)" ...
-    ... % run rules
-    "f1==high & f2==medium & f3==low & f4==medium => activity=run (0.3)" ...
-    "f2==very_high && f3==high => activity=run (0.8)" ...
-    "f3==medium | f3==high => activity=run (0.5)" ...
-    "f1==low => activity=run (0.3)" ...
-    "f2==very_high => activity=run (0.4)" ...
-    "f4==low => activity=run (0.3)" ...    
-    "f4==high => activity=run (0.4)"
-];
-fis = addRule(fis, rules_list);
-
-fis.DefuzzificationMethod = "centroid";
 y = evalfis(fis, fis_features_activities_matrix);
 error = mse(y, fis_activities_targets_vector);
