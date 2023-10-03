@@ -6,8 +6,8 @@ clc;
 
 FINAL_SELECTED_FEATURES = 5;
 SEQUENTIALFS_HIDDEN_LAYER_SIZE = 18;
-DEFUZZIFICATION_METHODS = ["centroid", "bisector", "lom", "som", "mom"];
 N_TRIANGLES = 30;
+DEFUZZIFICATION_METHOD = "mom";
 
 addpath('./fuzzy_inference_system');
 addpath('./data_preprocessing');
@@ -117,24 +117,21 @@ fis = addRule(fis, rules);
 
 %% Test the FIS
 
-% Test the network with different defuzzification methods
-for i = 1: size(DEFUZZIFICATION_METHODS, 2)
-
-    fis.DefuzzificationMethod = DEFUZZIFICATION_METHODS(i);
+fis.DefuzzificationMethod = DEFUZZIFICATION_METHOD;
     
-    % Predict the output and compute the error
-    y = evalfis(fis, fis_features_activities_matrix);
-    error = mse(y, fis_activities_targets_vector);
-    
-    % Encode output and target to generate the confusion matrix
-    encoded_y = full(ind2vec(round(y)'));
-    encoded_t = full(ind2vec(fis_activities_targets_vector'));
+% Predict the output and compute the error
+y = evalfis(fis, fis_features_activities_matrix);
+error = mse(y, fis_activities_targets_vector);
 
-    figure(figure_id);
-    plotconfusion(encoded_t, encoded_y);
-    figure_id = figure_id + 1;
+% Encode output and target to generate the confusion matrix
+encoded_y = full(ind2vec(round(y)'));
+encoded_t = full(ind2vec(fis_activities_targets_vector'));
 
-    [c, ~] = confusion(encoded_t, encoded_y);
-    correct_classification_percentage = 100 * (1 - c);
-    fprintf("Defuzzification Method: %s, Correct classification: %d%%\n", DEFUZZIFICATION_METHODS(i), correct_classification_percentage);
-end
+figure(figure_id);
+plotconfusion(encoded_t, encoded_y);
+figure_id = figure_id + 1;
+
+% Evaluate correct classification percentage
+[c, ~] = confusion(encoded_t, encoded_y);
+correct_classification_percentage = 100 * (1 - c);
+fprintf("Number Triangles: %d, Defuzzification Method: %s, MSE: %d, Correct classification: %d%%\n", N_TRIANGLES, DEFUZZIFICATION_METHOD, error, correct_classification_percentage);
