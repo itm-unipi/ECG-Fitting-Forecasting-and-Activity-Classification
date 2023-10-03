@@ -89,8 +89,8 @@ while true
         y = evalfis(fis, fis_features_activities_matrix);
         
         % Encode output and target to generate the confusion matrix
-        encoded_y = full(ind2vec(round(y)'));
-        encoded_t = full(ind2vec(fis_activities_targets_vector'));
+        encoded_y = full(ind2vec(round(y)', 3));
+        encoded_t = full(ind2vec(fis_activities_targets_vector', 3));
     
         % Evaluate and save correct classification percentage
         [c, ~] = confusion(encoded_t, encoded_y);
