@@ -4,10 +4,10 @@ clc;
 
 %% Constants
 
-FINAL_SELECTED_FEATURES = 4;
+FINAL_SELECTED_FEATURES = 5;
 SEQUENTIALFS_HIDDEN_LAYER_SIZE = 18;
-HISTOGRAM_BUCKET_SIZE = 0.05;
-ACTIVITIES = ["walk", "sit", "run"];
+DEFUZZIFICATION_METHODS = ["centroid", "bisector", "lom", "som", "mom"];
+N_TRIANGLES = 30;
 
 addpath('./fuzzy_inference_system');
 addpath('./data_preprocessing');
@@ -18,7 +18,6 @@ figure_id = 1;
 
 load('../tmp/final_data');
 
-%{
 opts = statset('Display', 'iter', 'UseParallel', true);
 
 % Select the most relevant features for the activity target
@@ -32,135 +31,85 @@ opts = statset('Display', 'iter', 'UseParallel', true);
 
 % Prepare the fis dataset
 fis_features_activities_matrix = final_features_activities_matrix(:, fs);
-%}
-
-filter = [false false true false false true false false false false true false true false];
-fis_features_activities_matrix = final_features_activities_matrix(:, filter);
 fis_activities_targets_vector = final_activities_targets_vector;
 
 save('../tmp/fis_final_data', ...
     'fis_features_activities_matrix', ...
     'fis_activities_targets_vector');
 
-%% Compute features histograms and save histograms
+%% Find membership functions for input and output
 
-load('../tmp/fis_final_data');
+x = 0:0.0001:1;
+step = 1/(N_TRIANGLES + 1);
 
+% Iterate all features
 for i = 1 : FINAL_SELECTED_FEATURES
-    
-    figure(figure_id);
-    histogram(fis_features_activities_matrix(:, i)', BinWidth=HISTOGRAM_BUCKET_SIZE);
-    title("Feature " + i);
 
-    saveas(figure_id, "../tmp/fis_feature_" + i + "_histogram", 'png');
+    step = 1 / (N_TRIANGLES - 1);
+
+    figure(figure_id);
+    title("Feature " + i + " Analysis");
+    xlabel('x');
+    ylabel('Degree of Membership');
+    hold on;
+    
+    % Create all triangular membership functions
+    for j = 1 : N_TRIANGLES
+
+        center = (j - 1) * step;
+        membership_function = trimf(x, [(center - step) center (center + step)]);
+        plot(x, membership_function);
+    end
+
+    saveas(figure_id, "../tmp/fis_feature_" + i + "_membership_function", 'png');
     figure_id = figure_id + 1;
 end
 
-%% Find membership functions for input and output
+x = 0:0.0001:4;
 
-% Feature 1
-
-x = 0:0.01:1;
-
-y1 = gbellmf(x, [0.03 2 0.025]);
-y2 = gbellmf(x, [0.1 1.5 0.4]);
-y3 = gbellmf(x, [0.2 2.5 0.725]);
-
-figure(figure_id); plot(x, y1, 'blue', x, y2, 'red', x, y3, 'green');
-title('Feature 1 Analysis');
+figure(figure_id)
+title("Output Analysis");
 xlabel('x');
 ylabel('Degree of Membership');
+hold on;
 
-saveas(figure_id, '../tmp/fis_feature_1_membership_function', 'png');
-figure_id = figure_id + 1;
+% Create output triangular membership function
+membership_function = trimf(x, [0 1 2]);
+plot(x, membership_function);
 
-% Feature 2
+membership_function = trimf(x, [1 2 3]);
+plot(x, membership_function);
 
-y1 = gbellmf(x, [0.18 1.5 0.01]);
-y2 = gbellmf(x, [0.2 1.5 0.275]);
-y3 = gbellmf(x, [0.1 1.5 0.525]);
-y4 = gbellmf(x, [0.1 1.5 0.825]);
-
-figure(figure_id); plot(x, y1, 'black', x, y2, 'red', x, y3, 'green', x, y4, 'blue');
-title('Feature 2 Analysis');
-xlabel('x');
-ylabel('Degree of Membership');
-
-saveas(figure_id, '../tmp/fis_feature_2_membership_function', 'png');
-figure_id = figure_id + 1;
-
-% Feature 3 
-
-y1 = gbellmf(x, [0.06 1.5 0.125]);
-y2 = gbellmf(x, [0.03 1.5 0.475]);
-y3 = gbellmf(x, [0.02 1.8 0.675]);
-
-figure(figure_id); plot(x, y1, 'blue', x, y2, 'red', x, y3, 'green');
-title('Feature 3 Analysis');
-xlabel('x');
-ylabel('Degree of Membership');
-
-saveas(figure_id, '../tmp/fis_feature_3_membership_function', 'png');
-figure_id = figure_id + 1;
-
-% Feature 4
-
-y1 = gbellmf(x, [0.05 2 0.1]);
-y2 = gbellmf(x, [0.145 2 0.475]);
-y3 = gbellmf(x, [0.04 2 0.95]);
-
-figure(figure_id); plot(x, y1, 'blue', x, y2, 'red', x, y3, 'green');
-title('Feature 4 Analysis');
-xlabel('x');
-ylabel('Degree of Membership');
-
-saveas(figure_id, '../tmp/fis_feature_3_membership_function', 'png');
-figure_id = figure_id + 1;
-
-% Output
-x = 0:0.01:4;
-
-y1 = gbellmf(x, [0.2 2 1]);
-y2 = gbellmf(x, [0.2 2 2]);
-y3 = gbellmf(x, [0.2 2 3]);
-
-figure(figure_id); plot(x, y1, 'blue', x, y2, 'red', x, y3, 'green');
-title('Output Analysis');
-xlabel('x');
-ylabel('Degree of Membership');
+membership_function = trimf(x, [2 3 4]);
+plot(x, membership_function);
 
 saveas(figure_id, '../tmp/fis_output_membership_function', 'png');
 figure_id = figure_id + 1;
+
 
 %% Mamdani FIS creation
 
 fis = mamfis('Name' , "MamdaniFis");
 
-fis = addInput(fis, [0 1], 'Name', "f1");
-fis = addMF(fis, "f1", "gbellmf", [0.03 2 0.025], 'Name', "low");
-fis = addMF(fis, "f1", "gbellmf", [0.1 1.5 0.4], 'Name', "medium");
-fis = addMF(fis, "f1", "gbellmf", [0.2 2.5 0.725], 'Name', "high");
+% Add input for every feature 
+for i = 1 : FINAL_SELECTED_FEATURES
+    
+    fis = addInput(fis, [0 1], 'Name', "f" + i);
+    step = 1 / (N_TRIANGLES + 1);
+    
+    % Add the triangular membership functions for every input
+    for j = 1 : N_TRIANGLES
 
-fis = addInput(fis, [0 1], 'Name', "f2");
-fis = addMF(fis, "f2", "gbellmf", [0.18 1.5 0.01], 'Name', "low");
-fis = addMF(fis, "f2", "gbellmf", [0.2 1.5 0.275], 'Name', "medium");
-fis = addMF(fis, "f2", "gbellmf", [0.1 1.5 0.525], 'Name', "high");
-fis = addMF(fis, "f2", "gbellmf", [0.1 1.5 0.825], 'Name', "very_high");
+        center = j * step;
+        fis = addMF(fis, "f" + i, "trimf", [(center - step) center (center + step)], 'Name', "FS" + j);
+    end
+end
 
-fis = addInput(fis, [0 1], 'Name', "f3");
-fis = addMF(fis, "f3", "gbellmf", [0.06 1.5 0.125], 'Name', "low");
-fis = addMF(fis, "f3", "gbellmf", [0.03 1.5 0.475], 'Name', "medium");
-fis = addMF(fis, "f3", "gbellmf", [0.02 1.8 0.675], 'Name', "high");
-
-fis = addInput(fis, [0 1], 'Name', "f4");
-fis = addMF(fis, "f4", "gbellmf", [0.05 2 0.1], 'Name', "low");
-fis = addMF(fis, "f4", "gbellmf", [0.145 2 0.475], 'Name', "medium");
-fis = addMF(fis, "f4", "gbellmf", [0.04 2 0.95], 'Name', "high");
-
+% Add the output and its membership functions
 fis = addOutput(fis, [1 3], 'Name', "activity");
-fis = addMF(fis, "activity", "gbellmf", [0.2 2 1], 'Name', "sit");
-fis = addMF(fis, "activity", "gbellmf", [0.2 2 2], 'Name', "walk");
-fis = addMF(fis, "activity", "gbellmf", [0.2 2 3], 'Name', "run");
+fis = addMF(fis, "activity", "trimf", [0 1 2], 'Name', "sit");
+fis = addMF(fis, "activity", "trimf", [1 2 3], 'Name', "walk");
+fis = addMF(fis, "activity", "trimf", [2 3 4], 'Name', "run");
 
 % Generate rules using Wang-Mendel method
 rules = get_rules(fis, fis_features_activities_matrix, fis_activities_targets_vector);
@@ -168,7 +117,24 @@ fis = addRule(fis, rules);
 
 %% Test the FIS
 
-%fis.DefuzzificationMethod = "lom";
+% Test the network with different defuzzification methods
+for i = 1: size(DEFUZZIFICATION_METHODS, 2)
 
-y = evalfis(fis, fis_features_activities_matrix);
-error = mse(y, fis_activities_targets_vector);
+    fis.DefuzzificationMethod = DEFUZZIFICATION_METHODS(i);
+    
+    % Predict the output and compute the error
+    y = evalfis(fis, fis_features_activities_matrix);
+    error = mse(y, fis_activities_targets_vector);
+    
+    % Encode output and target to generate the confusion matrix
+    encoded_y = full(ind2vec(round(y)'));
+    encoded_t = full(ind2vec(fis_activities_targets_vector'));
+
+    figure(figure_id);
+    plotconfusion(encoded_t, encoded_y);
+    figure_id = figure_id + 1;
+
+    [c, ~] = confusion(encoded_t, encoded_y);
+    correct_classification_percentage = 100 * (1 - c);
+    fprintf("Defuzzification Method: %s, Correct classification: %d%%\n", DEFUZZIFICATION_METHODS(i), correct_classification_percentage);
+end

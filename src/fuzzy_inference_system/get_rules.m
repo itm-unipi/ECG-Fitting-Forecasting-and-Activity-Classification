@@ -19,7 +19,7 @@ function rules = get_rules(fis, features, targets)
             for k = 1 : size(fis.Inputs(j).MembershipFunctions, 2)
                 
                 membership_function_parameters = fis.Inputs(j).MembershipFunctions(k).Parameters;
-                new_membership_degree = gbellmf(features(i, j), membership_function_parameters);
+                new_membership_degree = trimf(features(i, j), membership_function_parameters);
     
                 % Search for the highest membership degree value
                 if (new_membership_degree > membership_degree)
