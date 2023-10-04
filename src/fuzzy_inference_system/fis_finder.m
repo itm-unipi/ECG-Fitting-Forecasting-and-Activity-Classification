@@ -102,3 +102,5 @@ while true
     results(k, 1) = n_triangles;
     k = k + 1;
 end
+
+save('../tmp/fis_finder_results', 'results');
