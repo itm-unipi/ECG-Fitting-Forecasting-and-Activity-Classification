@@ -129,6 +129,7 @@ encoded_t = full(ind2vec(fis_activities_targets_vector'));
 
 figure(figure_id);
 plotconfusion(encoded_t, encoded_y);
+saveas(figure_id, '../tmp/fis_confusion_matrix', 'png');
 figure_id = figure_id + 1;
 
 % Evaluate correct classification percentage
