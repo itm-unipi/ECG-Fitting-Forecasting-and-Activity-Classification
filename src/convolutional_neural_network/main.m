@@ -8,12 +8,13 @@ RESOURCES_PATH = '../resources';
 WINDOW_SIZE = 5000;
 FRACTION_TEST_SET = 0.15;
 N_CHANNELS = 11;
-N_FILTERS = 128;
-FILTER_SIZE = 15;
+N_FILTERS = 125;
+FILTER_SIZE = 10;
 STRIDE = 2;
 HIDDEN_LAYER_SIZE = 100;
 OUTPUT_LAYER_SIZE = 1;
-MAX_EPOCHS = 30;
+MAX_EPOCHS = 50;
+MINI_BATCH_SIZE = 64;
 
 addpath('./convolutional_neural_network');
 rng("default");
@@ -41,26 +42,55 @@ save('../tmp/cnn_final_dataset', ...
     'test_set', ...
     'test_targets');
 
+%%
+
+load('../tmp/cnn_final_dataset_5000');
+
 %% Define CNN architecture and train it
 
 layers = [
     sequenceInputLayer(N_CHANNELS)
 
-    convolution1dLayer(FILTER_SIZE, N_FILTERS , 'Stride', STRIDE, 'Padding', 'same')
+    convolution1dLayer(FILTER_SIZE, N_FILTERS, 'Stride', STRIDE, 'Padding', 'same')
     batchNormalizationLayer
     reluLayer  
     maxPooling1dLayer(4, 'Stride', 4, 'Padding', 'same')
-    
+
+    convolution1dLayer(FILTER_SIZE, N_FILTERS * 2, 'Stride', STRIDE, 'Padding', 'same')
+    batchNormalizationLayer
+    reluLayer  
+    maxPooling1dLayer(4, 'Stride', 4, 'Padding', 'same')
+
+    convolution1dLayer(FILTER_SIZE, N_FILTERS * 3, 'Stride', STRIDE, 'Padding', 'same')
+    batchNormalizationLayer
+    reluLayer  
+    maxPooling1dLayer(4, 'Stride', 4, 'Padding', 'same')
+
+    convolution1dLayer(FILTER_SIZE, N_FILTERS * 4, 'Stride', STRIDE, 'Padding', 'same')
+    batchNormalizationLayer
+    reluLayer  
+    maxPooling1dLayer(4, 'Stride', 4, 'Padding', 'same')
+
     globalAveragePooling1dLayer
-
     fullyConnectedLayer(HIDDEN_LAYER_SIZE)
-
     fullyConnectedLayer(OUTPUT_LAYER_SIZE)
+    
     regressionLayer
 ];
 
-options = trainingOptions('adam', ...
+options = trainingOptions( ...
+    'adam', ...
+    ...
     MaxEpochs = MAX_EPOCHS, ...
+    MiniBatchSize = MINI_BATCH_SIZE, ...
+    Shuffle = 'every-epoch' , ...
+    ...
+    InitialLearnRate = 0.01, ...
+    LearnRateSchedule = 'piecewise', ...
+    LearnRateDropPeriod = 10, ...
+    LearnRateDropFactor = 0.1, ...
+    L2Regularization = 0.01, ...
+    ...
     ExecutionEnvironment = 'gpu', ...
     Plots = 'training-progress', ...
     Verbose = 1, ...
@@ -71,15 +101,14 @@ net = trainNetwork(training_set, training_targets, layers, options);
 
 %% Test the CNN
 
-y = predict(net, test_set, ExecutionEnvironment='gpu');
+y_training = predict(net, training_set, ExecutionEnvironment='gpu');
+y_test = predict(net, test_set, ExecutionEnvironment='gpu');
 
 % Plot regression 
 figure; 
-plotregression(training_targets, y);
-layer_graph = layerGraph(layers);
+plotregression(training_targets, y_training);
+figure; 
+plotregression(test_targets, y_test);
 
-% Re-Test training set
-figure;
-y = predict(net, training_set, ExecutionEnvironment='gpu');
-plotregression(training_targets, y);
+% layer_graph = layerGraph(layers);
 
