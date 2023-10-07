@@ -16,7 +16,6 @@ RESOURCES_PATH = '../resources';
 % Dataset generation parameters
 WINDOW_SIZE = 5000;
 FRACTION_TEST_SET = 0.15;
-FRACTION_VALIDATION_SET = 0.117;
 
 % Network layers parameters
 N_CHANNELS = 11;
