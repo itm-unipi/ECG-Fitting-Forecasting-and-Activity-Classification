@@ -2,6 +2,13 @@ clear;
 close all;
 clc;
 
+%% Generate tmp folder if not exists
+
+tmp_folder = '../tmp';
+if ~exist(tmp_folder, 'dir')
+    mkdir(tmp_folder);
+end
+
 %% Constants
 
 N_SUBJECTS = 22;
