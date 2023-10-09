@@ -12,22 +12,32 @@ end
 %% Constants
 
 RESOURCES_PATH = '../resources';
+
+% Dataset generation parameters
 WINDOW_SIZE = 50000;
 FRACTION_TEST_SET = 0.15;
 
+% Network layers parameters
 N_CHANNELS = 12;
-MAX_EPOCHS = 20;
-MINI_BATCH_SIZE = 6;
-HIDDEN_LAYER_SIZE = 200;
+MAX_EPOCHS = 50;
+MINI_BATCH_SIZE = 4;
+LSMT_LAYER_SIZE = 100;
+HIDDEN_LAYER_SIZE = 256;
 OUTPUT_LAYER_SIZE = 1;
+DROPOUT_PROBABILITY = 0.3;
+
+% Training options parameters
 INITIAL_LEARN_RATE = 0.01;
+LEARN_RATE_SCHEDULE = 'piecewise';
+LEARN_RATE_DROP_PERIOD = 10;
+LEARN_RATE_DROP_FACTOR = 0.1;
 
 addpath('./recurrent_neural_network');
 rng("default");
 
 %% Generate the dataset
 
-[dataset, targets] = get_dataset(RESOURCES_PATH, WINDOW_SIZE);
+[dataset, targets] = get_dataset_single_step(RESOURCES_PATH, WINDOW_SIZE);
 
 % Normalize dataset with z-score
 total_mean = mean([dataset{:}], 2);
@@ -52,24 +62,21 @@ save('../tmp/rnn_final_dataset', ...
     'test_set', ...
     'test_targets');
 
-%% Load
+%% Define RNN architecture and train it
 
 load('../tmp/rnn_final_dataset');
 
-%% Define Network Architecture
-
+% Network structure
 layers = [ ...
     sequenceInputLayer(N_CHANNELS)
-    
-    lstmLayer(HIDDEN_LAYER_SIZE, 'OutputMode', 'sequence')
-    
-    fullyConnectedLayer(50)
-    dropoutLayer(0.5)
+    lstmLayer(LSMT_LAYER_SIZE)
+    fullyConnectedLayer(HIDDEN_LAYER_SIZE)
+    dropoutLayer(DROPOUT_PROBABILITY)
     fullyConnectedLayer(OUTPUT_LAYER_SIZE)
-    
     regressionLayer
 ];
 
+% Training option
 options = trainingOptions( ...
     'adam', ...
     ...
@@ -77,8 +84,10 @@ options = trainingOptions( ...
     MiniBatchSize = MINI_BATCH_SIZE, ...
     Shuffle = 'never' , ...
     ...
-    InitialLearnRate = INITIAL_LEARN_RATE, ....
-    GradientThreshold = 1, ...
+    InitialLearnRate = INITIAL_LEARN_RATE, ...
+    LearnRateSchedule = LEARN_RATE_SCHEDULE, ...
+    LearnRateDropPeriod = LEARN_RATE_DROP_PERIOD, ...
+    LearnRateDropFactor = LEARN_RATE_DROP_FACTOR, ...
     ...
     ExecutionEnvironment = 'gpu', ...
     Plots = 'training-progress', ...
@@ -86,5 +95,30 @@ options = trainingOptions( ...
     VerboseFrequency = 1 ...
 );
 
-% Train the Network
 net = trainNetwork(training_set, training_targets, layers, options);
+
+save('../tmp/rnn_final_net', 'net');
+
+%% Test the RNN
+
+y_training = predict(net, training_set, ExecutionEnvironment='gpu', MiniBatchSize=6);
+y_test = predict(net, test_set, ExecutionEnvironment='gpu', MiniBatchSize=6);
+
+targets = test_targets{1};
+x = 1:size(targets, 2);
+y = y_test{1};
+
+figure;
+plot(x(:, 1:10000), targets(:, 1:10000)');
+hold on;
+plot(x(:, 1:10000), y(:, 1:10000)');
+
+% TODO: compute RMSE
+
+% Plot regression and save result
+figure(1); 
+plotregression(training_targets, y_training);
+saveas(1, '../tmp/rnn_training_regression.png');
+figure(2); 
+plotregression(test_targets, y_test);
+saveas(2, '../tmp/rnn_test_regression.png');
