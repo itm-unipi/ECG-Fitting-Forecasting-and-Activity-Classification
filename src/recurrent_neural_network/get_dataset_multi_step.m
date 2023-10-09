@@ -1,4 +1,4 @@
-function [dataset, targets] = get_dataset(resources_path, window_size)
+function [dataset, targets] = get_dataset_multi_step(resources_path, window_size)
 
     % Get names of timeseries files and initialize features matrix
     csv_timeseries = dir(fullfile(resources_path, '*timeseries.csv'));
