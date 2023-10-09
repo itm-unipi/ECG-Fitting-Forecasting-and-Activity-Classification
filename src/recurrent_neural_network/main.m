@@ -12,22 +12,22 @@ end
 %% Constants
 
 RESOURCES_PATH = '../resources';
+WINDOW_SIZE = 50000;
 FRACTION_TEST_SET = 0.15;
 
 N_CHANNELS = 12;
-MAX_EPOCHS = 60;
-MINI_BATCH_SIZE = 20;
+MAX_EPOCHS = 20;
+MINI_BATCH_SIZE = 6;
 HIDDEN_LAYER_SIZE = 200;
 OUTPUT_LAYER_SIZE = 1;
 INITIAL_LEARN_RATE = 0.01;
-
 
 addpath('./recurrent_neural_network');
 rng("default");
 
 %% Generate the dataset
 
-[dataset, targets] = get_dataset(RESOURCES_PATH);
+[dataset, targets] = get_dataset(RESOURCES_PATH, WINDOW_SIZE);
 
 % Normalize dataset with z-score
 total_mean = mean([dataset{:}], 2);
