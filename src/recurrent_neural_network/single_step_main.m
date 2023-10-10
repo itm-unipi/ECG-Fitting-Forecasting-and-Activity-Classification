@@ -97,7 +97,7 @@ options = trainingOptions( ...
 
 net = trainNetwork(training_set, training_targets, layers, options);
 
-save('../tmp/rnn_final_net', 'net');
+save('../tmp/rnn_single_step_final_net', 'net');
 
 %% Test the RNN
 
@@ -113,12 +113,28 @@ plot(x(:, 1:10000), targets(:, 1:10000)');
 hold on;
 plot(x(:, 1:10000), y(:, 1:10000)');
 
-% TODO: compute RMSE
-
 % Plot regression and save result
 figure(1); 
 plotregression(training_targets, y_training);
-saveas(1, '../tmp/rnn_training_regression.png');
+saveas(1, '../tmp/rnn_single_step_training_regression.png');
 figure(2); 
 plotregression(test_targets, y_test);
-saveas(2, '../tmp/rnn_test_regression.png');
+saveas(2, '../tmp/rnn_single_step_test_regression.png');
+
+% Compute the RMSE
+rmse = zeros(1, size(y_test, 1));
+
+for i = 1 : size(y_test, 1)
+    rmse(i) = sqrt(mean((y_test{i} - test_targets{i}).^2, "all"));
+end
+
+figure(3);
+stem(rmse);
+grid on;
+ylabel("RMSE");
+xlabel("# Test");
+title("RMSE of each test");
+saveas(3, '../tmp/rnn_single_step_rmse.png');
+
+% Calculate the mean RMSE over all test observations
+fprintf("Mean RMSE: %d\n", mean(rmse));

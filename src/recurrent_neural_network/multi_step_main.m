@@ -5,7 +5,7 @@ clc;
 %% Constants
 
 RESOURCES_PATH = '../resources';
-N_PREDICTIONS = 20; 
+N_PREDICTIONS = 1000; 
 
 % Dataset generation parameters
 WINDOW_SIZE = 50000;
@@ -90,7 +90,7 @@ options = trainingOptions( ...
 
 net = trainNetwork(training_set, training_targets, layers, options);
 
-save('../tmp/rnn_multi_step_final_net', 'net_multi_step');
+save('../tmp/rnn_multi_step_final_net', 'net');
 
 %% Multi-step Closed Loop Forecasting
 
@@ -114,16 +114,61 @@ end
 
 %% Test the RNN
 
-targets = test_targets{1}(12, :);
-x = 1:size(targets, 2);
+% Compare predictions of 4 random cells with original targets
+cell_index = randperm(size(y_predicted, 1), 4);
 
-figure;
-plot(x(:, 1:10000), targets(:, 1:10000)');
-hold on;
-y = y_predicted{1}(12, :);
-plot(x(:, 1:10000), y(:, 1:10000)');
+figure(1);
+for i = 1: size(cell_index, 2)
 
-% TODO: plot regression and RMSE
+    targets = test_targets{i}(end, :);
+    x = 1:size(targets, 2);
 
+    subplot(2, 2, i);
+    plot(x(:, (end - N_PREDICTIONS) : end), targets(:, (end - N_PREDICTIONS) : end)');
+    grid on;
+    hold on;
+    y = y_predicted{1}(end, :);
+    plot(x(:, (end - N_PREDICTIONS) : end), y(:, (end - N_PREDICTIONS) : end)');
+    title("ECG for cell " + cell_index(1, i));
+end
 
+saveas(1, "../tmp/rnn_multi_step_predictions.png");
+
+%% Plot regression and RMSE
+
+rmse = zeros(N_CHANNELS, size(y_predicted, 1));
+
+% Compute the RMSE for each channel and cell
+for i = 1 : size(y_predicted, 1)
+    for k = 1 : N_CHANNELS
+        rmse(k, i) = sqrt(mean((y_predicted{i}(k, :) - test_targets{i}(k, :)).^2, "all"));
+    end
+end
+
+% Generate RMSE plot for all channels
+figure(2);
+for i = 1 : N_CHANNELS
+
+    subplot(3, 4, i);
+
+    stem(rmse(i, :));
+    grid on;
+    ylabel("RMSE");
+    xlabel("# Test");
+    title("RMSE of each test (ch " + i + ")");
+
+    % Calculate the mean RMSE
+    fprintf("Mean RMSE (channel %d): %d\n", i, mean(rmse(i, :)));
+end
+
+saveas(2, "../tmp/rnn_multi_step_rmse.png");
+
+% Generate RMSE plot for ecg
+figure(3);
+stem(rmse(end, :));
+grid on;
+ylabel("RMSE");
+xlabel("# Test");
+title("RMSE of each test (ECG)");
+saveas(3, "../tmp/rnn_multi_step_rmse_ecg.png");
 
