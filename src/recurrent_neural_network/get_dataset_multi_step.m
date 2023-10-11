@@ -43,11 +43,11 @@ function [dataset, targets] = get_dataset_multi_step(resources_path, window_size
 
             dataset = [ 
                 dataset; 
-                { table2array([ raw_timeseries(start_window_index : end_window_index - 1, :) raw_targets(start_window_index : end_window_index - 1, :) ])' }
+                { table2array([ raw_targets(start_window_index : end_window_index - 1, :) ])' }
             ];
             targets = [ 
                 targets; 
-                { table2array([ raw_timeseries(start_window_index + 1 : end_window_index, :) raw_targets(start_window_index + 1: end_window_index, :) ])' }
+                { table2array([ raw_targets(start_window_index + 1: end_window_index, :) ])' }
             ];
     
             fprintf("file: %s, window: %d\n", csv_timeseries(k).name, i);

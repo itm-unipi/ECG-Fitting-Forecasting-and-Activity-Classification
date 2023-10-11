@@ -5,7 +5,7 @@ clc;
 %% Constants
 
 RESOURCES_PATH = '../resources';
-N_PREDICTIONS = 500; 
+N_PREDICTIONS = 10; 
 
 % Dataset generation parameters
 WINDOW_SIZE = 50000;
@@ -15,8 +15,9 @@ FRACTION_TEST_SET = 0.15;
 N_CHANNELS = 12;
 MAX_EPOCHS = 30;
 MINI_BATCH_SIZE = 4;
-LSTM_LAYER_SIZE = 125;
-HIDDEN_LAYER_SIZE = 324;
+LSTM_LAYER_SIZE = 200;
+HIDDEN_LAYER_SIZE = 256;
+OUTPUT_LAYER_SIZE = 1;
 DROPOUT_PROBABILITY = 0.4;
 
 % Training options parameters
@@ -64,10 +65,8 @@ layers = [ ...
     sequenceInputLayer(N_CHANNELS)
     lstmLayer(LSTM_LAYER_SIZE)
     fullyConnectedLayer(HIDDEN_LAYER_SIZE)
-    dropoutLayer(0.2)
-    fullyConnectedLayer(HIDDEN_LAYER_SIZE / 2)
-    dropoutLayer(0.4)
-    fullyConnectedLayer(N_CHANNELS)
+    dropoutLayer(DROPOUT_PROBABILITY)
+    fullyConnectedLayer(OUTPUT_LAYER_SIZE)
     regressionLayer
 ];
 
@@ -107,7 +106,7 @@ for i = 1 : size(test_set, 1)
     net = resetState(net);
     y_predicted{i} = zeros(N_CHANNELS, size(test_set{i}, 2));
     [net, y_predicted{i}(:, 1 : offset)] = predictAndUpdateState(net, test_set{i}(:, 1:offset));
-    
+    break;
     % Predict the subsequent values using the previously predicted ones and the RNN state 
     for k = offset + 1 : size(test_set{i}, 2)
         [net, y_predicted{i}(:, k)] = predictAndUpdateState(net, y_predicted{i}(:, k - 1));
@@ -143,7 +142,7 @@ all_y_predicted = cat(2, y_predicted{:});
 
 % only for ECG
 figure(2); 
-plotregression(all_test_targets(12, end - N_PREDICTIONS: end), all_y_predicted(12, end - N_PREDICTIONS: end));
+plotregression(all_test_targets(1, end - N_PREDICTIONS: end), all_y_predicted(1, end - N_PREDICTIONS: end));
 saveas(2, '../tmp/rnn_multi_step_test_regression.png');
 
 rmse = zeros(N_CHANNELS, size(y_predicted, 1));
