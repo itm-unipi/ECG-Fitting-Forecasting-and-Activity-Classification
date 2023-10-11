@@ -6,6 +6,11 @@ function [dataset, targets] = get_dataset_multi_step(resources_path, window_size
     dataset = {};
     targets = {};
 
+    is_window_size_set = false;
+    if window_size == -1
+        is_window_size_set = true;
+    end
+
     % Iterate timeseries files
     for k = 1 : length(csv_timeseries) 
 
@@ -18,6 +23,10 @@ function [dataset, targets] = get_dataset_multi_step(resources_path, window_size
         file_path = fullfile(resources_path, csv_targets(k).name);
         raw_targets = readtable(file_path);
         raw_targets = raw_targets(:, 2);
+
+        if is_window_size_set == true
+            window_size = size(raw_timeseries, 1);
+        end
 
         % Iterate all possible windows
         i = 1;

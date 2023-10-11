@@ -5,7 +5,7 @@ clc;
 %% Constants
 
 RESOURCES_PATH = '../resources';
-N_PREDICTIONS = 1000; 
+N_PREDICTIONS = 500; 
 
 % Dataset generation parameters
 WINDOW_SIZE = 50000;
@@ -13,11 +13,11 @@ FRACTION_TEST_SET = 0.15;
 
 % Network layers parameters
 N_CHANNELS = 12;
-MAX_EPOCHS = 50;
+MAX_EPOCHS = 30;
 MINI_BATCH_SIZE = 4;
-LSMT_LAYER_SIZE = 100;
-HIDDEN_LAYER_SIZE = 256;
-DROPOUT_PROBABILITY = 0.3;
+LSTM_LAYER_SIZE = 125;
+HIDDEN_LAYER_SIZE = 324;
+DROPOUT_PROBABILITY = 0.4;
 
 % Training options parameters
 INITIAL_LEARN_RATE = 0.01;
@@ -62,9 +62,11 @@ load('../tmp/rnn_multi_step_final_dataset');
 % Network structure
 layers = [ ...
     sequenceInputLayer(N_CHANNELS)
-    lstmLayer(LSMT_LAYER_SIZE)
+    lstmLayer(LSTM_LAYER_SIZE)
     fullyConnectedLayer(HIDDEN_LAYER_SIZE)
-    dropoutLayer(DROPOUT_PROBABILITY)
+    dropoutLayer(0.2)
+    fullyConnectedLayer(HIDDEN_LAYER_SIZE / 2)
+    dropoutLayer(0.4)
     fullyConnectedLayer(N_CHANNELS)
     regressionLayer
 ];
@@ -136,6 +138,14 @@ saveas(1, "../tmp/rnn_multi_step_predictions.png");
 
 %% Plot regression and RMSE
 
+all_test_targets = cat(2, test_targets{:});
+all_y_predicted = cat(2, y_predicted{:});
+
+% only for ECG
+figure(2); 
+plotregression(all_test_targets(12, end - N_PREDICTIONS: end), all_y_predicted(12, end - N_PREDICTIONS: end));
+saveas(2, '../tmp/rnn_multi_step_test_regression.png');
+
 rmse = zeros(N_CHANNELS, size(y_predicted, 1));
 
 % Compute the RMSE for each channel and cell
@@ -146,7 +156,7 @@ for i = 1 : size(y_predicted, 1)
 end
 
 % Generate RMSE plot for all channels
-figure(2);
+figure(3);
 for i = 1 : N_CHANNELS
 
     subplot(3, 4, i);
@@ -161,14 +171,13 @@ for i = 1 : N_CHANNELS
     fprintf("Mean RMSE (channel %d): %d\n", i, mean(rmse(i, :)));
 end
 
-saveas(2, "../tmp/rnn_multi_step_rmse.png");
+saveas(3, "../tmp/rnn_multi_step_rmse.png");
 
 % Generate RMSE plot for ecg
-figure(3);
+figure(4);
 stem(rmse(end, :));
 grid on;
 ylabel("RMSE");
 xlabel("# Test");
 title("RMSE of each test (ECG)");
-saveas(3, "../tmp/rnn_multi_step_rmse_ecg.png");
-
+saveas(4, "../tmp/rnn_multi_step_rmse_ecg.png");
