@@ -19,12 +19,12 @@ FRACTION_TEST_SET = 0.15;
 
 % Network layers parameters
 N_CHANNELS = 12;
-MAX_EPOCHS = 50;
+MAX_EPOCHS = 30;
 MINI_BATCH_SIZE = 4;
-LSMT_LAYER_SIZE = 100;
+LSTM_LAYER_SIZE = 200;
 HIDDEN_LAYER_SIZE = 256;
 OUTPUT_LAYER_SIZE = 1;
-DROPOUT_PROBABILITY = 0.3;
+DROPOUT_PROBABILITY = 0.4;
 
 % Training options parameters
 INITIAL_LEARN_RATE = 0.01;
@@ -56,7 +56,7 @@ training_targets = targets(training(partition_data), :);
 test_set = dataset(test(partition_data), :);
 test_targets = targets(test(partition_data), :);
 
-save('../tmp/rnn_final_dataset', ...
+save('../tmp/rnn_single_step_final_dataset', ...
     'training_set', ...
     'training_targets', ...    
     'test_set', ...
@@ -64,12 +64,12 @@ save('../tmp/rnn_final_dataset', ...
 
 %% Define RNN architecture and train it
 
-load('../tmp/rnn_final_dataset');
+load('../tmp/rnn_single_step_final_dataset');
 
 % Network structure
 layers = [ ...
     sequenceInputLayer(N_CHANNELS)
-    lstmLayer(LSMT_LAYER_SIZE)
+    lstmLayer(LSTM_LAYER_SIZE)
     fullyConnectedLayer(HIDDEN_LAYER_SIZE)
     dropoutLayer(DROPOUT_PROBABILITY)
     fullyConnectedLayer(OUTPUT_LAYER_SIZE)
@@ -101,9 +101,10 @@ save('../tmp/rnn_single_step_final_net', 'net');
 
 %% Test the RNN
 
-y_training = predict(net, training_set, ExecutionEnvironment='gpu', MiniBatchSize=6);
-y_test = predict(net, test_set, ExecutionEnvironment='gpu', MiniBatchSize=6);
+y_training = predict(net, training_set, ExecutionEnvironment='gpu', MiniBatchSize=MINI_BATCH_SIZE);
+y_test = predict(net, test_set, ExecutionEnvironment='gpu', MiniBatchSize=MINI_BATCH_SIZE);
 
+%%
 targets = test_targets{1};
 x = 1:size(targets, 2);
 y = y_test{1};
@@ -113,7 +114,8 @@ plot(x(:, 1:10000), targets(:, 1:10000)');
 hold on;
 plot(x(:, 1:10000), y(:, 1:10000)');
 
-% Plot regression and save result
+%% Plot regression and save result
+
 figure(1); 
 plotregression(training_targets, y_training);
 saveas(1, '../tmp/rnn_single_step_training_regression.png');
@@ -121,9 +123,9 @@ figure(2);
 plotregression(test_targets, y_test);
 saveas(2, '../tmp/rnn_single_step_test_regression.png');
 
-% Compute the RMSE
 rmse = zeros(1, size(y_test, 1));
 
+% Compute the RMSE
 for i = 1 : size(y_test, 1)
     rmse(i) = sqrt(mean((y_test{i} - test_targets{i}).^2, "all"));
 end
