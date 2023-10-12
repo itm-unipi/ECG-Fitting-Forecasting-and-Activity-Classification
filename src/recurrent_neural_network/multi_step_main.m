@@ -8,22 +8,22 @@ RESOURCES_PATH = '../resources';
 N_PREDICTIONS = 10; 
 
 % Dataset generation parameters
-WINDOW_SIZE = 50000;
+WINDOW_SIZE = 1000;
 FRACTION_TEST_SET = 0.15;
 
 % Network layers parameters
-N_CHANNELS = 12;
-MAX_EPOCHS = 30;
-MINI_BATCH_SIZE = 4;
-LSTM_LAYER_SIZE = 200;
+N_CHANNELS = 1;
+MAX_EPOCHS = 21;
+MINI_BATCH_SIZE = 45;
+LSTM_LAYER_SIZE = 64;
 HIDDEN_LAYER_SIZE = 256;
 OUTPUT_LAYER_SIZE = 1;
-DROPOUT_PROBABILITY = 0.4;
+% DROPOUT_PROBABILITY = 0.4;
 
 % Training options parameters
 INITIAL_LEARN_RATE = 0.01;
 LEARN_RATE_SCHEDULE = 'piecewise';
-LEARN_RATE_DROP_PERIOD = 10;
+LEARN_RATE_DROP_PERIOD = 7;
 LEARN_RATE_DROP_FACTOR = 0.1;
 
 addpath('./recurrent_neural_network');
@@ -65,8 +65,7 @@ layers = [ ...
     sequenceInputLayer(N_CHANNELS)
     lstmLayer(LSTM_LAYER_SIZE)
     fullyConnectedLayer(HIDDEN_LAYER_SIZE)
-    dropoutLayer(DROPOUT_PROBABILITY)
-    fullyConnectedLayer(OUTPUT_LAYER_SIZE)
+    fullyConnectedLayer(N_CHANNELS)
     regressionLayer
 ];
 
@@ -76,20 +75,21 @@ options = trainingOptions( ...
     ...
     MaxEpochs = MAX_EPOCHS, ...
     MiniBatchSize = MINI_BATCH_SIZE, ...
-    Shuffle = 'never' , ...
+    Shuffle = 'never', ...
     ...
     InitialLearnRate = INITIAL_LEARN_RATE, ...
     LearnRateSchedule = LEARN_RATE_SCHEDULE, ...
     LearnRateDropPeriod = LEARN_RATE_DROP_PERIOD, ...
     LearnRateDropFactor = LEARN_RATE_DROP_FACTOR, ...
     ...
+    SequencePaddingDirection = 'left', ...
     ExecutionEnvironment = 'gpu', ...
     Plots = 'training-progress', ...
     Verbose = 1, ...
     VerboseFrequency = 1 ...
 );
 
-net = trainNetwork(training_set, training_targets, layers, options);
+net = trainNetwork(training_set, table2array(training_targets), layers, options);
 
 save('../tmp/rnn_multi_step_final_net', 'net');
 

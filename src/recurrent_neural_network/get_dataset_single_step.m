@@ -6,9 +6,9 @@ function [dataset, targets] = get_dataset_single_step(resources_path, window_siz
     dataset = {};
     targets = {};
 
-    is_window_size_set = false;
+    is_window_size_set = true;
     if window_size == -1
-        is_window_size_set = true;
+        is_window_size_set = false;
     end
 
     % Iterate timeseries files
@@ -24,7 +24,7 @@ function [dataset, targets] = get_dataset_single_step(resources_path, window_siz
         raw_targets = readtable(file_path);
         raw_targets = raw_targets(:, 2);
 
-        if is_window_size_set == true
+        if is_window_size_set == false
             window_size = size(raw_timeseries, 1);
         end
 

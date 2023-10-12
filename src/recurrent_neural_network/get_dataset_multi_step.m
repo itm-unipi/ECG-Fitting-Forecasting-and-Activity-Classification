@@ -4,11 +4,11 @@ function [dataset, targets] = get_dataset_multi_step(resources_path, window_size
     csv_timeseries = dir(fullfile(resources_path, '*timeseries.csv'));
     csv_targets = dir(fullfile(resources_path, '*targets.csv'));
     dataset = {};
-    targets = {};
+    targets = [];
 
-    is_window_size_set = false;
+    is_window_size_set = true;
     if window_size == -1
-        is_window_size_set = true;
+        is_window_size_set = false;
     end
 
     % Iterate timeseries files
@@ -24,7 +24,7 @@ function [dataset, targets] = get_dataset_multi_step(resources_path, window_size
         raw_targets = readtable(file_path);
         raw_targets = raw_targets(:, 2);
 
-        if is_window_size_set == true
+        if is_window_size_set == false
             window_size = size(raw_timeseries, 1);
         end
 
@@ -47,7 +47,7 @@ function [dataset, targets] = get_dataset_multi_step(resources_path, window_size
             ];
             targets = [ 
                 targets; 
-                { table2array([ raw_targets(start_window_index + 1: end_window_index, :) ])' }
+                raw_targets(end_window_index, :)
             ];
     
             fprintf("file: %s, window: %d\n", csv_timeseries(k).name, i);
