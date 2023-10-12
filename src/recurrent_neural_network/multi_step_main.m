@@ -15,7 +15,7 @@ FRACTION_TEST_SET = 0.15;
 N_CHANNELS = 1;
 MAX_EPOCHS = 21;
 MINI_BATCH_SIZE = 9;
-LSTM_LAYER_SIZE = 64;
+LSTM_LAYER_SIZE = 128;
 HIDDEN_LAYER_SIZE = 256;
 OUTPUT_LAYER_SIZE = 1;
 % DROPOUT_PROBABILITY = 0.4;
@@ -91,7 +91,7 @@ options = trainingOptions( ...
     VerboseFrequency = 1 ...
 );
 
-net = trainNetwork(training_set, table2array(training_targets), layers, options);
+net = trainNetwork(training_set, training_targets, layers, options);
 
 save('../tmp/rnn_multi_step_final_net', 'net');
 
@@ -109,7 +109,7 @@ for i = 1 : size(test_set, 1)
     % Initialize the RNN state using a portion of the dataset 
     net = resetState(net);
     y_predicted{i} = zeros(N_CHANNELS, size(test_set{i}, 2));
-    [net, y_predicted{i}(:, 1 : offset)] = predictAndUpdateState(net, test_set{i}(:, 1:offset));
+    [net, y_predicted{i}(:, 1 : offset)] = predictAndUpdateState(net, test_set{i}(:, 1 : offset));
 
     % Predict the subsequent values using the previously predicted ones and the RNN state 
     for k = offset + 1 : size(test_set{i}, 2)
