@@ -4,7 +4,7 @@ function [dataset, targets] = get_dataset_multi_step(resources_path, window_size
     csv_timeseries = dir(fullfile(resources_path, '*timeseries.csv'));
     csv_targets = dir(fullfile(resources_path, '*targets.csv'));
     dataset = {};
-    targets = [];
+    targets = {};
 
     is_window_size_set = true;
     if window_size == -1
@@ -47,7 +47,7 @@ function [dataset, targets] = get_dataset_multi_step(resources_path, window_size
             ];
             targets = [ 
                 targets; 
-                raw_targets(end_window_index, :)
+                { table2array([ raw_targets(start_window_index + 1: end_window_index, :) ])' }
             ];
     
             fprintf("file: %s, window: %d\n", csv_timeseries(k).name, i);

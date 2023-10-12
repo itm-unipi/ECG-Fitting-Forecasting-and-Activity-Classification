@@ -5,23 +5,23 @@ clc;
 %% Constants
 
 RESOURCES_PATH = '../resources';
-N_PREDICTIONS = 10; 
+N_PREDICTIONS = 50; 
 
 % Dataset generation parameters
-WINDOW_SIZE = 1000;
+WINDOW_SIZE = 200;
 FRACTION_TEST_SET = 0.15;
 
 % Network layers parameters
 N_CHANNELS = 1;
 MAX_EPOCHS = 21;
-MINI_BATCH_SIZE = 45;
+MINI_BATCH_SIZE = 9;
 LSTM_LAYER_SIZE = 64;
 HIDDEN_LAYER_SIZE = 256;
 OUTPUT_LAYER_SIZE = 1;
 % DROPOUT_PROBABILITY = 0.4;
 
 % Training options parameters
-INITIAL_LEARN_RATE = 0.01;
+INITIAL_LEARN_RATE = 0.1;
 LEARN_RATE_SCHEDULE = 'piecewise';
 LEARN_RATE_DROP_PERIOD = 7;
 LEARN_RATE_DROP_FACTOR = 0.1;
@@ -54,7 +54,9 @@ save('../tmp/rnn_multi_step_final_dataset', ...
     'training_set', ...
     'training_targets', ...    
     'test_set', ...
-    'test_targets');
+    'test_targets', ...
+    'total_mean', ...
+    'total_std');
 
 %% Define RNN architecture and train it
 
@@ -95,6 +97,8 @@ save('../tmp/rnn_multi_step_final_net', 'net');
 
 %% Multi-step Closed Loop Forecasting
 
+load('../tmp/rnn_multi_step_final_net')
+
 y_predicted = cell(size(test_set, 1), 1);
 
 % Iterate all cells
@@ -106,11 +110,14 @@ for i = 1 : size(test_set, 1)
     net = resetState(net);
     y_predicted{i} = zeros(N_CHANNELS, size(test_set{i}, 2));
     [net, y_predicted{i}(:, 1 : offset)] = predictAndUpdateState(net, test_set{i}(:, 1:offset));
-    break;
+
     % Predict the subsequent values using the previously predicted ones and the RNN state 
     for k = offset + 1 : size(test_set{i}, 2)
-        [net, y_predicted{i}(:, k)] = predictAndUpdateState(net, y_predicted{i}(:, k - 1));
+        y_normalized = (y_predicted{i}(:, k - 1) - total_mean) ./ total_std;
+        [net, y_predicted{i}(:, k)] = predictAndUpdateState(net, y_normalized);
     end
+
+    fprintf("%d/%d\n", i, size(test_set, 1));
 end
 
 %% Test the RNN
