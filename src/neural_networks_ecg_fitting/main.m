@@ -16,6 +16,7 @@ SPREAD_STD = 0.8;
 ERROR_GOAL = 0;
 
 addpath('./data_preprocessing');
+rng("default");
 
 %% Load Data and Initialize variables
 

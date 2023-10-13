@@ -7,7 +7,9 @@ clc;
 MLP_HIDDEN_LAYER_SIZE = 20;
 MLP_TRAINING_FUNCTION = "trainbr";
 
+addpath('./neural_network_activity_classification');
 addpath('./data_preprocessing');
+rng("default");
 
 %% Load Data and Initialize variables
 

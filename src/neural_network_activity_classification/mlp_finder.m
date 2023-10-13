@@ -11,6 +11,9 @@ MIN_HIDDEN_LAYER_NEURONS = 15;
 HIDDEN_LAYER_NEURONS_STEP = 5;
 TRAINING_FUNCTIONS = ["trainlm", "trainbr", "trainbfg", "trainrp", "trainscg", "traincgb", "traincgf", "traincgp", "trainoss", "traingdx", "traingdm", "traingd"];
 
+addpath('./neural_network_activity_classification');
+rng("default");
+
 %% Load Data and Initialize variables
 
 load('../tmp/final_data');

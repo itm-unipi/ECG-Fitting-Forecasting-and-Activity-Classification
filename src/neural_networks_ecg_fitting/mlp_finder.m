@@ -11,6 +11,7 @@ HIDDEN_LAYER_NEURONS_STEP = 5;
 ECG_TARGET = "mean"; % 'mean' or 'std'
 
 addpath('./data_preprocessing');
+rng("default");
 
 %% Load Data and Initialize variables
 
