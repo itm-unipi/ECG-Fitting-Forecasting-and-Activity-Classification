@@ -5,29 +5,30 @@ clc;
 %% Constants
 
 RESOURCES_PATH = '../resources';
-N_PREDICTIONS = 50; 
+N_PREDICTIONS = 30; 
 
 % Dataset generation parameters
-WINDOW_SIZE = 200;
+WINDOW_SIZE = 500;
 FRACTION_TEST_SET = 0.15;
 
 % Network layers parameters
 N_CHANNELS = 1;
-MAX_EPOCHS = 21;
-MINI_BATCH_SIZE = 9;
-LSTM_LAYER_SIZE = 128;
-HIDDEN_LAYER_SIZE = 256;
+MAX_EPOCHS = 30;
+MINI_BATCH_SIZE = 32;
+LSTM_LAYER_SIZE = 100;
+HIDDEN_LAYER_SIZE = 200;
 OUTPUT_LAYER_SIZE = 1;
-% DROPOUT_PROBABILITY = 0.4;
 
 % Training options parameters
-INITIAL_LEARN_RATE = 0.1;
+INITIAL_LEARN_RATE = 0.01;
 LEARN_RATE_SCHEDULE = 'piecewise';
-LEARN_RATE_DROP_PERIOD = 7;
+LEARN_RATE_DROP_PERIOD = 10;
 LEARN_RATE_DROP_FACTOR = 0.1;
 
 addpath('./recurrent_neural_network');
 rng("default");
+
+figure_id = 1;
 
 %% Generate the dataset
 
@@ -73,7 +74,7 @@ layers = [ ...
 
 % Training option
 options = trainingOptions( ...
-    'adam', ...
+    'rmsprop', ...
     ...
     MaxEpochs = MAX_EPOCHS, ...
     MiniBatchSize = MINI_BATCH_SIZE, ...
@@ -84,7 +85,6 @@ options = trainingOptions( ...
     LearnRateDropPeriod = LEARN_RATE_DROP_PERIOD, ...
     LearnRateDropFactor = LEARN_RATE_DROP_FACTOR, ...
     ...
-    SequencePaddingDirection = 'left', ...
     ExecutionEnvironment = 'gpu', ...
     Plots = 'training-progress', ...
     Verbose = 1, ...
@@ -95,9 +95,35 @@ net = trainNetwork(training_set, training_targets, layers, options);
 
 save('../tmp/rnn_multi_step_final_net', 'net');
 
+%% Multi-step Open Loop Forecasting
+
+load('../tmp/rnn_multi_step_final_dataset');
+load('../tmp/rnn_multi_step_final_net');
+
+y_predicted = cell(size(test_set, 1), 1);
+
+% Iterate all cells
+for i = 1 : size(test_set, 1)
+
+    offset = size(test_set{i}, 2) - N_PREDICTIONS; 
+
+    % Initialize the RNN state using a portion of the dataset 
+    net = resetState(net);
+    y_predicted{i} = zeros(N_CHANNELS, size(test_set{i}, 2));
+    [net, y_predicted{i}(:, 1 : offset)] = predictAndUpdateState(net, test_set{i}(:, 1 : offset));
+
+    % Predict the subsequent values using new input and the RNN state 
+    for k = offset + 1 : size(test_set{i}, 2)
+        [net, y_predicted{i}(:, k)] = predictAndUpdateState(net, test_set{i}(:, k - 1));
+    end
+
+    fprintf("Forecasting the cell %d out of %d done\n", i, size(test_set, 1));
+end
+
 %% Multi-step Closed Loop Forecasting
 
-load('../tmp/rnn_multi_step_final_net')
+load('../tmp/rnn_multi_step_final_dataset');
+load('../tmp/rnn_multi_step_final_net');
 
 y_predicted = cell(size(test_set, 1), 1);
 
@@ -117,73 +143,53 @@ for i = 1 : size(test_set, 1)
         [net, y_predicted{i}(:, k)] = predictAndUpdateState(net, y_normalized);
     end
 
-    fprintf("%d/%d\n", i, size(test_set, 1));
+    fprintf("Forecasting the cell %d out of %d done\n", i, size(test_set, 1));
 end
 
-%% Test the RNN
+%% Print cell forecasting preview
 
-% Compare predictions of 4 random cells with original targets
-cell_index = randperm(size(y_predicted, 1), 4);
+N_FIGURES = 5;
+N_CELLS = 6;
 
-figure(1);
-for i = 1: size(cell_index, 2)
+% Iterate figures
+for k = 1 : N_FIGURES
 
-    targets = test_targets{i}(end, :);
-    x = 1:size(targets, 2);
+    figure(figure_id);
 
-    subplot(2, 2, i);
-    plot(x(:, (end - N_PREDICTIONS) : end), targets(:, (end - N_PREDICTIONS) : end)');
-    grid on;
-    hold on;
-    y = y_predicted{1}(end, :);
-    plot(x(:, (end - N_PREDICTIONS) : end), y(:, (end - N_PREDICTIONS) : end)');
-    title("ECG for cell " + cell_index(1, i));
-end
+    % Iterate the cells of the figures
+    for i = 1 : N_CELLS
+  
+        subplot(2, 3, i), grid on, hold on;
 
-saveas(1, "../tmp/rnn_multi_step_predictions.png");
-
-%% Plot regression and RMSE
-
-all_test_targets = cat(2, test_targets{:});
-all_y_predicted = cat(2, y_predicted{:});
-
-% only for ECG
-figure(2); 
-plotregression(all_test_targets(1, end - N_PREDICTIONS: end), all_y_predicted(1, end - N_PREDICTIONS: end));
-saveas(2, '../tmp/rnn_multi_step_test_regression.png');
-
-rmse = zeros(N_CHANNELS, size(y_predicted, 1));
-
-% Compute the RMSE for each channel and cell
-for i = 1 : size(y_predicted, 1)
-    for k = 1 : N_CHANNELS
-        rmse(k, i) = sqrt(mean((y_predicted{i}(k, :) - test_targets{i}(k, :)).^2, "all"));
+        % Plot the predicted values and the targets values
+        plot(y_predicted{N_CELLS * (k - 1) + i}(:, end - N_PREDICTIONS + 1:end));
+        plot(test_targets{N_CELLS * (k - 1) + i}(:, end - N_PREDICTIONS + 1:end));
+    
+        title("ECG of cell " + (N_CELLS * (k - 1) + i)) ;
     end
+
+    saveas(figure_id, "../tmp/rnn_multi_step_preview_" + k + ".png");
+    figure_id = figure_id + 1;
 end
 
-% Generate RMSE plot for all channels
-figure(3);
-for i = 1 : N_CHANNELS
+%% Print a specific cell
 
-    subplot(3, 4, i);
+cell = 10;
 
-    stem(rmse(i, :));
-    grid on;
-    ylabel("RMSE");
-    xlabel("# Test");
-    title("RMSE of each test (ch " + i + ")");
+figure(figure_id), grid on, hold on;
+plot(y_predicted{cell}(:, end - N_PREDICTIONS + 1:end), 'Marker', 'o', 'MarkerSize', 5);
+plot(test_targets{cell}(:, end - N_PREDICTIONS + 1:end), 'Marker', 'o', 'MarkerSize', 5);
+title("Predict ECG of cell " + cell) ;
 
-    % Calculate the mean RMSE
-    fprintf("Mean RMSE (channel %d): %d\n", i, mean(rmse(i, :)));
+saveas(figure_id, "../tmp/rnn_multi_step_cell_" + cell  + ".png");
+figure_id = figure_id + 1;
+
+%% Compute the mean RMSE of all predicted cells
+
+rmse = zeros(1, size(y_predicted, 1));
+
+for i = 1 : size(y_predicted, 1)
+    rmse(1, i) = sqrt(mean((y_predicted{i}(1, end - N_PREDICTIONS + 1:end) - test_targets{i}(1, end - N_PREDICTIONS + 1:end)).^2, "all"));
 end
 
-saveas(3, "../tmp/rnn_multi_step_rmse.png");
-
-% Generate RMSE plot for ecg
-figure(4);
-stem(rmse(end, :));
-grid on;
-ylabel("RMSE");
-xlabel("# Test");
-title("RMSE of each test (ECG)");
-saveas(4, "../tmp/rnn_multi_step_rmse_ecg.png");
+fprintf("Mean RMSE for all cells: %d\n", (mean(rmse)));
