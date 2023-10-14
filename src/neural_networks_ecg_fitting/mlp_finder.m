@@ -48,13 +48,15 @@ while true
         % Create and train a mlp network
         net = fitnet(hidden_layer_size, 'trainbr');
         net.trainParam.showWindow = 0;
-        [net,tr] = train(net, x, t);
+        [net, tr] = train(net, x, t);
 
         % Test the network and save results
-        y = net(x);
+        test_x = x(:, tr.testInd);
+        test_t = t(:, tr.testInd);
+        test_y = net(test_x);
         % figure, plotregression(t, y);
-        mse_value = mse(y', t');
-        regression_stats = fitlm(t', y');
+        mse_value = mse(test_t', test_y');
+        regression_stats = fitlm(test_t', test_y');
         r_value = sqrt(regression_stats.Rsquared.Ordinary);
         results(i, j * 2) = mse_value;
         results(i, j * 2 + 1) = r_value;
