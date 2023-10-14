@@ -31,7 +31,7 @@ min_spread = min(distance);
 max_spread = max(distance);
 
 fprintf("%d %d \n", min_spread, max_spread);
-results = zeros(floor((max_spread - min_spread) / SPREAD_STEP), N_REPETITION * 2 + 1);
+results = zeros(floor(1 / SPREAD_STEP), N_REPETITION * 2 + 1);
 
 %% RBF Training and Test 
 
