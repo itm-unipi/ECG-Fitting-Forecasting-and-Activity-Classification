@@ -104,3 +104,4 @@ while true
 end
 
 save('../tmp/fis_finder_results', 'results');
+writematrix(results, fullfile('../tmp', 'fis_finder_results.csv'));

@@ -9,7 +9,8 @@ NEURONS_NUMBER_STEP = 5;
 SPREAD_STEP = 0.2;
 N_REPETITION = 5;
 ERROR_GOAL = 0;
-ECG_TARGET = "mean"; % 'mean' or 'std'
+ECG_TARGET = "std"; % 'mean' or 'std'
+FRACTION_TEST_SET = 0.15;
 
 addpath('./data_preprocessing');
 rng("default");
@@ -25,8 +26,15 @@ else
     t = final_ecg_std_targets_vector';
 end
 
+% Partition dataset
+partition_data = cvpartition(size(x, 2), "Holdout", FRACTION_TEST_SET);
+training_x = x(:, training(partition_data));
+training_t = t(:, training(partition_data));
+test_x = x(:, test(partition_data));
+test_t = t(:, test(partition_data));
+
 % Compute the spread range
-distance = pdist(x');
+distance = pdist(training_x');
 min_spread = min(distance);
 max_spread = max(distance);
 
@@ -51,14 +59,12 @@ while true
     for j = 1 : N_REPETITION
 
         % Create and train a rbf network with Bayesian regularization
-        net = newrb(x, t, ERROR_GOAL, spread, MAX_NEURONS_NUMBER, NEURONS_NUMBER_STEP);
+        net = newrb(training_x, training_t, ERROR_GOAL, spread, MAX_NEURONS_NUMBER, NEURONS_NUMBER_STEP);
         net.trainFcn = 'trainbr';
         net.trainParam.showWindow = 0;
-        [net, tr] = train(net, x, t);
+        net = train(net, training_x, training_t);
 
         % Test the network and save results
-        test_x = x(:, tr.testInd);
-        test_t = t(:, tr.testInd);
         test_y = net(test_x);
         % figure, plotregression(t, y);
         mse_value = mse(test_t', test_y');
