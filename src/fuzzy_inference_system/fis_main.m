@@ -6,7 +6,8 @@ clc;
 
 FINAL_SELECTED_FEATURES = 5;
 SEQUENTIALFS_HIDDEN_LAYER_SIZE = 18;
-N_TRIANGLES = 30;
+N_TRIANGLES = 25;
+FRACTION_TEST_SET = 0.15;
 DEFUZZIFICATION_METHOD = "mom";
 
 addpath('./fuzzy_inference_system');
@@ -36,6 +37,15 @@ fis_activities_targets_vector = final_activities_targets_vector;
 save('../tmp/fis_final_data', ...
     'fis_features_activities_matrix', ...
     'fis_activities_targets_vector');
+
+%% Load dataset and split it in training and test set
+
+load('../tmp/fis_final_data');
+partition_data = cvpartition(size(fis_features_activities_matrix, 1), "Holdout", FRACTION_TEST_SET);
+fis_train_features_activities_matrix = fis_features_activities_matrix(training(partition_data), :);
+fis_train_activities_targets_vector = fis_activities_targets_vector(training(partition_data), :);
+fis_test_features_activities_matrix = fis_features_activities_matrix(test(partition_data), :);
+fis_test_activities_targets_vector = fis_activities_targets_vector(test(partition_data), :);
 
 %% Find membership functions for input and output
 
@@ -112,7 +122,7 @@ fis = addMF(fis, "activity", "trimf", [1 2 3], 'Name', "walk");
 fis = addMF(fis, "activity", "trimf", [2 3 4], 'Name', "run");
 
 % Generate rules using Wang-Mendel method
-rules = get_rules(fis, fis_features_activities_matrix, fis_activities_targets_vector);
+rules = get_rules(fis, fis_train_features_activities_matrix, fis_train_activities_targets_vector);
 fis = addRule(fis, rules);
 
 %% Test the FIS
@@ -120,12 +130,12 @@ fis = addRule(fis, rules);
 fis.DefuzzificationMethod = DEFUZZIFICATION_METHOD;
     
 % Predict the output and compute the error
-y = evalfis(fis, fis_features_activities_matrix);
-error = mse(y, fis_activities_targets_vector);
+y = evalfis(fis, fis_test_features_activities_matrix);
+error = mse(y, fis_test_activities_targets_vector);
 
 % Encode output and target to generate the confusion matrix
 encoded_y = full(ind2vec(round(y)'));
-encoded_t = full(ind2vec(fis_activities_targets_vector'));
+encoded_t = full(ind2vec(fis_test_activities_targets_vector'));
 
 figure(figure_id);
 plotconfusion(encoded_t, encoded_y);

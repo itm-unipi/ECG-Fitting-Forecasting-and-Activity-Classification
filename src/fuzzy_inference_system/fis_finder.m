@@ -9,6 +9,7 @@ SEQUENTIALFS_HIDDEN_LAYER_SIZE = 18;
 MIN_TRIANGLES = 5;
 MAX_TRIANGLES = 50;
 TRIANGLES_STEP = 5;
+FRACTION_TEST_SET = 0.15;
 DEFUZZIFICATION_METHODS = ["centroid", "bisector", "lom", "som", "mom"];
 
 addpath('./fuzzy_inference_system');
@@ -37,6 +38,16 @@ fis_activities_targets_vector = final_activities_targets_vector;
 save('../tmp/fis_final_data', ...
     'fis_features_activities_matrix', ...
     'fis_activities_targets_vector');
+
+%% Load dataset and split it in training and test set
+
+load('../tmp/fis_final_data');
+partition_data = cvpartition(size(fis_features_activities_matrix, 1), "Holdout", FRACTION_TEST_SET);
+fis_train_features_activities_matrix = fis_features_activities_matrix(training(partition_data), :);
+fis_train_activities_targets_vector = fis_activities_targets_vector(training(partition_data), :);
+fis_test_features_activities_matrix = fis_features_activities_matrix(test(partition_data), :);
+fis_test_activities_targets_vector = fis_activities_targets_vector(test(partition_data), :);
+
 
 %% Test different triangles number
 
@@ -77,7 +88,7 @@ while true
     fis = addMF(fis, "activity", "trimf", [2 3 4], 'Name', "run");
     
     % Generate rules using Wang-Mendel method
-    rules = get_rules(fis, fis_features_activities_matrix, fis_activities_targets_vector);
+    rules = get_rules(fis, fis_train_features_activities_matrix, fis_train_activities_targets_vector);
     fis = addRule(fis, rules);
 
     % Test the network with different defuzzification methods
@@ -86,11 +97,11 @@ while true
         fis.DefuzzificationMethod = DEFUZZIFICATION_METHODS(i);
         
         % Predict the output
-        y = evalfis(fis, fis_features_activities_matrix);
+        y = evalfis(fis, fis_test_features_activities_matrix);
         
         % Encode output and target to generate the confusion matrix
         encoded_y = full(ind2vec(round(y)', 3));
-        encoded_t = full(ind2vec(fis_activities_targets_vector', 3));
+        encoded_t = full(ind2vec(fis_test_activities_targets_vector', 3));
     
         % Evaluate and save correct classification percentage
         [c, ~] = confusion(encoded_t, encoded_y);
