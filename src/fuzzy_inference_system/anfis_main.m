@@ -7,7 +7,8 @@ clc;
 N_MEMBERSHIP_FUNCTIONS = 3;
 INPUT_MEMBERSHIP_FUNCTION_TYPE = 'gbellmf';
 OUTPUT_MEMBERSHIP_FUNCTION_TYPE = 'linear';
-N_EPOCHS = 5;
+FRACTION_TEST_SET = 0.15;
+N_EPOCHS = 10;
 
 rng("default");
 
@@ -17,6 +18,8 @@ load('../tmp/fis_final_data');
 
 % Partition the dataset into two equal set for training and checking
 dataset = [fis_features_activities_matrix fis_activities_targets_vector];
+partition_data = cvpartition(size(fis_features_activities_matrix, 1), "Holdout", FRACTION_TEST_SET);
+
 training_data = dataset(1:2:size(dataset, 1), :);
 checking_data = dataset(2:2:size(dataset, 1), :);
 
@@ -28,12 +31,14 @@ options.InputMembershipFunctionType = INPUT_MEMBERSHIP_FUNCTION_TYPE;
 options.OutputMembershipFunctionType = OUTPUT_MEMBERSHIP_FUNCTION_TYPE;
 fismat = genfis(training_data(:, 1:5), training_data(:, 6), options);
 
-%% Train and test the ANFIS
+%% Train the ANFIS
 
 [net, training_error, ~, ~, checking_error] = anfis(training_data, fismat, N_EPOCHS, [], checking_data);
 
+%% Test the ANFIS
+
 % Predict the output
-y = evalfis(net, fis_features_activities_matrix);
+y = evalfis(net, checking_data(:, 1:end-1));
 
 % Round of the predicted value to the neareast integer value
 y_rounded = round(y);
@@ -48,7 +53,7 @@ end
 
 % Encode output and target to generate the confusion matrix
 encoded_y = full(ind2vec(y_rounded'));
-encoded_t = full(ind2vec(fis_activities_targets_vector'));
+encoded_t = full(ind2vec(checking_data(:, end)'));
 
 figure(1);
 plotconfusion(encoded_t, encoded_y);
