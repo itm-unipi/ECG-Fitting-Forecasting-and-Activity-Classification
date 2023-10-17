@@ -7,8 +7,7 @@ clc;
 N_MEMBERSHIP_FUNCTIONS = 3;
 INPUT_MEMBERSHIP_FUNCTION_TYPE = 'gbellmf';
 OUTPUT_MEMBERSHIP_FUNCTION_TYPE = 'linear';
-FRACTION_TEST_SET = 0.15;
-N_EPOCHS = 10;
+N_EPOCHS = 25;
 
 rng("default");
 
@@ -18,7 +17,6 @@ load('../tmp/fis_final_data');
 
 % Partition the dataset into two equal set for training and checking
 dataset = [fis_features_activities_matrix fis_activities_targets_vector];
-partition_data = cvpartition(size(fis_features_activities_matrix, 1), "Holdout", FRACTION_TEST_SET);
 
 training_data = dataset(1:2:size(dataset, 1), :);
 checking_data = dataset(2:2:size(dataset, 1), :);
