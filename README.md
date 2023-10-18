@@ -3,7 +3,7 @@
   <img src="https://cdn-icons-png.flaticon.com/256/2103/2103633.png" alt="canva-logo" height="64px"/>
 </p>
 
-University Project for "Intelligent Systems" course (MSc Computer Engineering @ University of Pisa). Implementation of ECG fitting and activity classification using `MLP` and `RBF neural networks`, `convolutional neural networks` and `recurrent neural networks`.
+University Project for "Intelligent Systems" course (MSc Computer Engineering @ University of Pisa). Implementation of ECG fitting, forecasting and activity classification using `MLP` and `RBF neural networks`, `convolutional neural networks`, `recurrent neural networks` and `fuzzy systems`.
 
 ## Overview
 
